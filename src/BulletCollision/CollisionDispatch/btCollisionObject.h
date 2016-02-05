@@ -67,6 +67,7 @@ protected:
 
 	btBroadphaseProxy*		m_broadphaseHandle;
 	btCollisionShape*		m_collisionShape;
+    btCollisionShape*		m_collisionShape2;
 	///m_extensionPointer is used by some internal low-level Bullet extensions.
 	void*					m_extensionPointer;
 	
@@ -212,6 +213,11 @@ public:
 		m_rootCollisionShape = collisionShape;
 	}
 
+    void setCollisionShape2(btCollisionShape* collisionShape)
+    {
+        m_collisionShape2 = collisionShape;
+    }
+
 	SIMD_FORCE_INLINE const btCollisionShape*	getCollisionShape() const
 	{
 		return m_collisionShape;
@@ -220,6 +226,16 @@ public:
 	SIMD_FORCE_INLINE btCollisionShape*	getCollisionShape()
 	{
 		return m_collisionShape;
+	}
+
+	SIMD_FORCE_INLINE const btCollisionShape* getCollisionShape2() const
+	{
+		return m_collisionShape2;
+	}
+
+	SIMD_FORCE_INLINE btCollisionShape*	getCollisionShape2()
+	{
+		return m_collisionShape2;
 	}
 
 	void	setIgnoreCollisionCheck(const btCollisionObject* co, bool ignoreCollisionCheck)
