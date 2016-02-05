@@ -67,6 +67,7 @@ protected:
 
 	btBroadphaseProxy*		m_broadphaseHandle;
 	btCollisionShape*		m_collisionShape;
+    btCollisionShape*		m_collisionShape2;
 	///m_extensionPointer is used by some internal low-level Bullet extensions.
 	void*					m_extensionPointer;
 	
@@ -94,8 +95,8 @@ protected:
 	///users can point to their objects, m_userPointer is not used by Bullet, see setUserPointer/getUserPointer
 	union
 	{
-		void*			m_userObjectPointer;
-		int	m_userIndex;
+    void*			m_userObjectPointer;
+    int	m_userIndex;
 	};
 
 	///time of impact calculation
@@ -215,6 +216,11 @@ public:
 		m_rootCollisionShape = collisionShape;
 	}
 
+    void setCollisionShape2(btCollisionShape* collisionShape)
+    {
+        m_collisionShape2 = collisionShape;
+    }
+
 	SIMD_FORCE_INLINE const btCollisionShape*	getCollisionShape() const
 	{
 		return m_collisionShape;
@@ -225,7 +231,16 @@ public:
 		return m_collisionShape;
 	}
 
-	
+	SIMD_FORCE_INLINE const btCollisionShape* getCollisionShape2() const
+	{
+		return m_collisionShape2;
+	}
+
+	SIMD_FORCE_INLINE btCollisionShape*	getCollisionShape2()
+	{
+		return m_collisionShape2;
+	}
+
 
 	
 
