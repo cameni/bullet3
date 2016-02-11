@@ -679,7 +679,7 @@ void btMultiBody::stepVelocities(btScalar dt,
 
 
 
-void btMultiBody::solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, float result[6]) const
+void btMultiBody::solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, btScalar result[6]) const
 {
 	int num_links = getNumLinks();
 	///solve I * x = rhs, so the result = invI * rhs

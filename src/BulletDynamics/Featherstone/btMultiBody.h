@@ -45,18 +45,18 @@ public:
     // initialization
     //
     
-    btMultiBody(int n_links,                // NOT including the base
-              btScalar mass,                // mass of base
-              const btVector3 &inertia,    // inertia of base, in base frame; assumed diagonal
+	btMultiBody(int n_links,             // NOT including the base
+		btScalar mass,                // mass of base
+		const btVector3 &inertia,    // inertia of base, in base frame; assumed diagonal
               bool fixed_base_,           // whether the base is fixed (true) or can move (false)
               bool can_sleep_);
 
     ~btMultiBody();
     
     void setupPrismatic(int i,             // 0 to num_links-1
-                        btScalar mass,
+						   btScalar mass,
                         const btVector3 &inertia,       // in my frame; assumed diagonal
-                        int parent,
+						   int parent,
                         const btQuaternion &rot_parent_to_this,  // rotate points in parent frame to my frame.
                         const btVector3 &joint_axis,             // in my frame
                         const btVector3 &r_vector_when_q_zero,  // vector from parent COM to my COM, in my frame, when q = 0.
@@ -64,9 +64,9 @@ public:
 						);
 
     void setupRevolute(int i,            // 0 to num_links-1
-                       btScalar mass,
-                       const btVector3 &inertia,
-                       int parent,
+                               btScalar mass,
+                               const btVector3 &inertia,
+                               int parent,
                        const btQuaternion &zero_rot_parent_to_this,  // rotate points in parent frame to this frame, when q = 0
                        const btVector3 &joint_axis,    // in my frame
                        const btVector3 &parent_axis_position,    // vector from parent COM to joint axis, in PARENT frame
@@ -270,16 +270,16 @@ public:
 	{
 
         for (int i = 0; i < 6 + getNumLinks(); ++i) 
-		{
+                {
 			m_real_buf[i] += delta_vee[i];
-		}
+                }
 		
-    }
+	}
     void applyDeltaVee(const btScalar * delta_vee, btScalar multiplier) 
 	{
 		btScalar sum = 0;
         for (int i = 0; i < 6 + getNumLinks(); ++i)
-		{
+                {
 			sum += delta_vee[i]*multiplier*delta_vee[i]*multiplier;
 		}
 		btScalar l = btSqrt(sum);
@@ -289,10 +289,10 @@ public:
 		{
 			maxl=l;
 	//		printf("maxl=%f\n",maxl);
-		}
+	}
 		*/
 		if (l>m_maxAppliedImpulse)
-		{
+	{
 //			printf("exceeds 100: l=%f\n",maxl);
 			multiplier *= m_maxAppliedImpulse/l;
 		}
@@ -402,8 +402,8 @@ private:
 
     void compTreeLinkVelocities(btVector3 *omega, btVector3 *vel) const;
 
-	void solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, float result[6]) const;
-    
+	void solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, btScalar result[6]) const;
+	
 	
 private:
 
@@ -417,7 +417,7 @@ private:
 
     btVector3 base_force;     // external force applied to base. World frame.
     btVector3 base_torque;    // external torque applied to base. World frame.
-    
+   
     btAlignedObjectArray<btMultibodyLink> links;    // array of links, excluding the base. index from 0 to num_links-1.
 	btAlignedObjectArray<btMultiBodyLinkCollider*> m_colliders;
     

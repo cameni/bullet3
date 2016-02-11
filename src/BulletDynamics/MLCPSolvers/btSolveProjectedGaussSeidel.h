@@ -30,7 +30,7 @@ public:
 
 		int i, j, numRows = A.rows();
 	
-		float delta;
+		btScalar delta;
 
 		for (int k = 0; k <numIterations; k++)
 		{
@@ -55,9 +55,9 @@ public:
 						delta += A(i,j) * x[j];
 				}
 
-				float aDiag = A(i,i);
+                btScalar aDiag = A(i,i);
 				x [i] = (b [i] - delta) / A(i,i);
-				float s = 1.f;
+                btScalar s = 1.f;
 
 				if (limitDependency[i]>=0)
 				{
