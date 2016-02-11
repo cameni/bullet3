@@ -29,6 +29,7 @@ subject to the following restrictions:
 
 /* SVN $Revision$ on $Date$ from http://bullet.googlecode.com*/
 #define BT_BULLET_VERSION 282
+#define BT_USE_DOUBLE_PRECISION
 
 inline int	btGetVersion()
 {
@@ -390,16 +391,16 @@ SIMD_FORCE_INLINE btScalar btSqrt(btScalar y)
     double x, z, tempf;
     unsigned long *tfptr = ((unsigned long *)&tempf) + 1;
 
-	tempf = y;
-	*tfptr = (0xbfcdd90a - *tfptr)>>1; /* estimate of 1/sqrt(y) */
-	x =  tempf;
-	z =  y*btScalar(0.5);
-	x = (btScalar(1.5)*x)-(x*x)*(x*z);         /* iteration formula     */
-	x = (btScalar(1.5)*x)-(x*x)*(x*z);
-	x = (btScalar(1.5)*x)-(x*x)*(x*z);
-	x = (btScalar(1.5)*x)-(x*x)*(x*z);
-	x = (btScalar(1.5)*x)-(x*x)*(x*z);
-	return x*y;
+    tempf = y;
+    *tfptr = (0xbfcdd90a - *tfptr)>>1; /* estimate of 1/sqrt(y) */
+    x =  tempf;
+    z =  y*btScalar(0.5);
+    x = (btScalar(1.5)*x)-(x*x)*(x*z);         /* iteration formula     */
+    x = (btScalar(1.5)*x)-(x*x)*(x*z);
+    x = (btScalar(1.5)*x)-(x*x)*(x*z);
+    x = (btScalar(1.5)*x)-(x*x)*(x*z);
+    x = (btScalar(1.5)*x)-(x*x)*(x*z);
+    return x*y;
 #else
 	return sqrtf(y); 
 #endif
