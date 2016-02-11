@@ -579,7 +579,7 @@ private:
 
     void compTreeLinkVelocities(btVector3 *omega, btVector3 *vel) const;
 
-	void solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, float result[6]) const;
+	void solveImatrix(const btVector3& rhs_top, const btVector3& rhs_bot, btScalar result[6]) const;
 	void solveImatrix(const btSpatialForceVector &rhs, btSpatialMotionVector &result) const;
 	
 	void updateLinksDofOffsets()

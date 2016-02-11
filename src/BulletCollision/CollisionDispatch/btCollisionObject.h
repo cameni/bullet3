@@ -92,12 +92,6 @@ protected:
 	///do not assign your own m_internalType unless you write a new dynamics object class.
 	int				m_internalType;
 
-	///users can point to their objects, m_userPointer is not used by Bullet, see setUserPointer/getUserPointer
-
-    void*			m_userObjectPointer;
-    
-    int	m_userIndex;
-
 	///time of impact calculation
 	btScalar		m_hitFraction; 
 	
@@ -114,6 +108,17 @@ protected:
 
 	///internal update revision number. It will be increased when the object changes. This allows some subsystems to perform lazy evaluation.
 	int			m_updateRevision;
+
+public:
+
+    ///users can point to their objects, m_userPointer is not used by Bullet, see setUserPointer/getUserPointer
+
+    void*			m_userObjectPointer;
+
+    union {
+        void*		m_userDataExt;
+        intptr_t	m_userIndex;
+    };
 
 
 public:
@@ -488,7 +493,7 @@ public:
 		return m_userObjectPointer;
 	}
 
-	int	getUserIndex() const
+    intptr_t	getUserIndex() const
 	{
 		return m_userIndex;
 	}
@@ -499,7 +504,7 @@ public:
 	}
 
 	///users can point to their objects, userPointer is not used by Bullet
-	void	setUserIndex(int index)
+	void	setUserIndex(intptr_t index)
 	{
 		m_userIndex = index;
 	}
