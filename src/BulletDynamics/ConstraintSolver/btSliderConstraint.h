@@ -296,14 +296,14 @@ public:
 struct btSliderConstraintData
 {
 	btTypedConstraintData	m_typeConstraintData;
-	btTransformFloatData m_rbAFrame; // constraint axii. Assumes z is hinge axis.
-	btTransformFloatData m_rbBFrame;
+	btTransformData m_rbAFrame; // constraint axii. Assumes z is hinge axis.
+	btTransformData m_rbBFrame;
 	
-	float	m_linearUpperLimit;
-	float	m_linearLowerLimit;
+	btScalar	m_linearUpperLimit;
+	btScalar	m_linearLowerLimit;
 
-	float	m_angularUpperLimit;
-	float	m_angularLowerLimit;
+	btScalar	m_angularUpperLimit;
+	btScalar	m_angularLowerLimit;
 
 	int	m_useLinearReferenceFrameA;
 	int m_useOffsetForConstraintFrame;
