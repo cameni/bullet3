@@ -221,7 +221,11 @@ public:
 		return m_gravity_acceleration;
 	}
 
-	void			setDamping(btScalar lin_damping, btScalar ang_damping);
+	void setDamping(btScalar lin_damping, btScalar ang_damping)
+    {
+        m_linearDamping = btClamped(lin_damping, (btScalar)btScalar(0.0), (btScalar)btScalar(1.0));
+        m_angularDamping = btClamped(ang_damping, (btScalar)btScalar(0.0), (btScalar)btScalar(1.0));
+    }
 
 	btScalar getLinearDamping() const
 	{
@@ -348,7 +352,11 @@ public:
 	const btVector3&     getCenterOfMassPosition() const { 
 		return m_worldTransform.getOrigin(); 
 	}
-	btQuaternion getOrientation() const;
+	btQuaternion getOrientation() const {
+        btQuaternion orn;
+        m_worldTransform.getBasis().getRotation(orn);
+        return orn;
+    }
 	
 	const btTransform&  getCenterOfMassTransform() const { 
 		return m_worldTransform; 
