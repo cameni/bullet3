@@ -325,7 +325,6 @@
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionObject.h" />
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionObjectWrapper.h" />
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionWorld.h" />
-    <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionWorldImporter.h" />
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.h" />
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btCompoundCompoundCollisionAlgorithm.h" />
     <ClInclude Include="..\..\src\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.h" />
@@ -468,8 +467,6 @@
     <ClCompile Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionObject.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionWorld.cpp">
-    </ClCompile>
-    <ClCompile Include="..\..\src\BulletCollision\CollisionDispatch\btCollisionWorldImporter.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.cpp">
     </ClCompile>

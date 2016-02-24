@@ -107,6 +107,11 @@ protected:
 	///internal update revision number. It will be increased when the object changes. This allows some subsystems to perform lazy evaluation.
 	int			m_updateRevision;
 
+	virtual bool	checkCollideWithOverride(const btCollisionObject* /* co */) const
+	{
+		return true;
+	}
+
 public:
 
     ///users can point to their objects, m_userPointer is not used by Bullet, see setUserPointer/getUserPointer

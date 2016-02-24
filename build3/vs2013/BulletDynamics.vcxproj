@@ -315,12 +315,10 @@
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btFixedConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btGearConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofConstraint.h" />
-    <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofSpring2Constraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofSpringConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btHinge2Constraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btHingeConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btJacobianEntry.h" />
-    <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btNNCGConstraintSolver.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btPoint2PointConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btSequentialImpulseConstraintSolver.h" />
     <ClInclude Include="..\..\src\BulletDynamics\ConstraintSolver\btSliderConstraint.h" />
@@ -342,7 +340,6 @@
     <ClInclude Include="..\..\src\BulletDynamics\Featherstone\btMultiBodySolverConstraint.h" />
     <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btDantzigLCP.h" />
     <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btDantzigSolver.h" />
-    <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btLemkeAlgorithm.h" />
     <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btLemkeSolver.h" />
     <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btMLCPSolver.h" />
     <ClInclude Include="..\..\src\BulletDynamics\MLCPSolvers\btMLCPSolverInterface.h" />
@@ -371,15 +368,11 @@
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofConstraint.cpp">
     </ClCompile>
-    <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofSpring2Constraint.cpp">
-    </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btGeneric6DofSpringConstraint.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btHinge2Constraint.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btHingeConstraint.cpp">
-    </ClCompile>
-    <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btNNCGConstraintSolver.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\ConstraintSolver\btPoint2PointConstraint.cpp">
     </ClCompile>
@@ -408,8 +401,6 @@
     <ClCompile Include="..\..\src\BulletDynamics\Featherstone\btMultiBodyPoint2Point.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\MLCPSolvers\btDantzigLCP.cpp">
-    </ClCompile>
-    <ClCompile Include="..\..\src\BulletDynamics\MLCPSolvers\btLemkeAlgorithm.cpp">
     </ClCompile>
     <ClCompile Include="..\..\src\BulletDynamics\MLCPSolvers\btMLCPSolver.cpp">
     </ClCompile>
