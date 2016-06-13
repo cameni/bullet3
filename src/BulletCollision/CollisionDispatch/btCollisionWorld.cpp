@@ -1403,7 +1403,7 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
                     btVector3 aabbMin(btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT));
 
                     DebugDrawcallback drawCallback(getDebugDrawer(),worldTransform,color);
-                    concaveMesh->processAllTriangles(&drawCallback,aabbMin,aabbMax);
+                    //concaveMesh->processAllTriangles(&drawCallback,aabbMin,aabbMax);
 
                 }
 

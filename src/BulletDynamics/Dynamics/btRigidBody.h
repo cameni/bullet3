@@ -96,6 +96,8 @@ class btRigidBody  : public btCollisionObject
 	int				m_rigidbodyFlags;
 	
 	int				m_debugBodyId;
+
+    unsigned int    m_terrainManifoldHandle;
 	
 
 protected:
@@ -555,12 +557,21 @@ public:
 
 	///////////////////////////////////////////////
 
+    unsigned int getTerrainManifoldHandle() const {
+        return m_terrainManifoldHandle;
+    }
+
+    void setTerrainManifoldHandle(unsigned int terrainManifoldHandle) {
+        m_terrainManifoldHandle = terrainManifoldHandle;
+    }
+
 	virtual	int	calculateSerializeBufferSize()	const;
 
 	///fills the dataBuffer and returns the struct name (and 0 on failure)
 	virtual	const char*	serialize(void* dataBuffer,  class btSerializer* serializer) const;
 
 	virtual void serializeSingleObject(class btSerializer* serializer) const;
+
 
 };
 

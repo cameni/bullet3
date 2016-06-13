@@ -96,7 +96,7 @@ void	btRigidBody::setupRigidBody(const btRigidBody::btRigidBodyConstructionInfo&
 	m_pushVelocity.setZero();
 	m_turnVelocity.setZero();
 
-	
+    m_terrainManifoldHandle= 0xffffffff;
 
 }
 
