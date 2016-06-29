@@ -27,6 +27,26 @@ struct tree_collision_pair
 {
     btCollisionObject* obj;
     bt::tree_collision_info* tree;
+    const terrain_mesh * tm;
+    bool active;
+
+    const bool operator== (const tree_collision_pair & tcp) const {
+        return obj == tcp.obj && tree == tcp.tree;
+    }
+
+    tree_collision_pair() 
+        : obj(0)
+        , tree(0)
+        , tm(0)
+        , active(false)
+    {}
+
+    tree_collision_pair(btCollisionObject* obj, bt::tree_collision_info* tree, const terrain_mesh * tm)
+        : obj(obj)
+        , tree(tree)
+        , tm(tm)
+        , active(false)
+    {}
 };
 
 
@@ -80,10 +100,10 @@ protected:
 	btCollisionObjectWrapper * _pb_wrap;
 	coid::slotalloc<btPersistentManifold *> _manifolds;
 	//coid::slotalloc<tree_batch> _tree_cache;
-	coid::dynarray<tree_collision_pair> _tree_collision_pairs;
+	coid::slotalloc<tree_collision_pair> _tree_collision_pairs;
 	coid::dynarray<btCollisionObjectWrapperCtorArgs> _cow_internal;
 	coid::dynarray<compound_processing_entry> _compound_processing_stack;
-	//iref<ot::logger> _logger;
+    //iref<ot::logger> _logger;
 	//iref<ot::sketch> _sketch;
 
     coid::dynarray<bt::triangle> _triangles;
@@ -124,9 +144,12 @@ protected:
     void process_trees_cache(btCollisionObject * cur_obj,const coid::dynarray<bt::tree_batch*>& trees_cache, uint32 frame);
     void build_tb_collision_info(bt::tree_batch * tb);
 
+    void add_tree_collision_pair(btCollisionObject * obj, bt::tree_collision_info* tree, const terrain_mesh * tm);
+
     fn_ext_collision _sphere_intersect;
 
-	virtual void process_tree_collisions();
+    void prepare_tree_collisions();
+	void process_tree_collisions();
 	//bool sphere_skewbox_test(const double3 & center, float r, const skewbox* sb, float * dist);
 	bool point_skewbox_test(const double3 & point, const skewbox* sb, float * dist);
 
