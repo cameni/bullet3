@@ -49,7 +49,6 @@ struct tree_collision_pair
         , reused(false)
         , manifold(0)
         , tree_identifier(0){}
-
 };
 
 
@@ -163,7 +162,6 @@ protected:
     fn_process_tree_collision _tree_collision;
 
     void process_tree_collisions();
-
     void get_obb(const btCollisionShape * cs, const btTransform& t, double3& cen, float3x3& basis);
     void oob_to_aabb(const btVector3& src_cen,
         const btMatrix3x3& src_basis,
