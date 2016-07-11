@@ -326,6 +326,22 @@ namespace ot {
 
     void discrete_dynamics_world::process_tree_collisions()
     {
+        tree_collision_pair tcp(obj, tree, tm);
+        bool found = _tree_collision_pairs.find_if([&](const tree_collision_pair & t) {
+            return t == tcp;
+        });
+
+        if (!found) {
+            tree_collision_pair * new_tcp = _tree_collision_pairs.add();
+            new_tcp->active = true;
+            new_tcp->obj = tcp.obj;
+            new_tcp->tm = tcp.tm;
+            new_tcp->tree = tcp.tree;
+        }
+    }
+
+    void discrete_dynamics_world::prepare_tree_collisions()
+    {
         _tree_collision_pairs.for_each([&](tree_collision_pair&  tcp) {
             btDispatcher * dispatcher = getDispatcher();
             btPersistentManifold * manifold = tcp.manifold;

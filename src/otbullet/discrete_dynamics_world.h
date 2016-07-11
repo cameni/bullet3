@@ -157,6 +157,8 @@ protected:
     void process_trees_cache(btCollisionObject * cur_obj, const coid::dynarray<bt::tree_batch*>& trees_cache, uint32 frame);
     void build_tb_collision_info(bt::tree_batch * tb);
 
+    void add_tree_collision_pair(btCollisionObject * obj, bt::tree_collision_info* tree, const terrain_mesh * tm);
+
     fn_ext_collision _sphere_intersect;
     fn_process_tree_collision _tree_collision;
 
