@@ -13,10 +13,12 @@ class btRigidBody;
 class btActionInterface;
 class btTransform;
 class btIDebugDraw;
+class btManifoldPoint;
 
 namespace bt {
     class constraint_info;
     class physics;
+    struct ot_world_physics_stats;
 }
 extern bt::physics* BT;
 //}ifc
@@ -66,6 +68,10 @@ public:
     ifc_fn void close_convex_shape( btCollisionShape* shape );
     ifc_fn void destroy_shape( ifc_inout btCollisionShape*& shape );
 
+    ifc_fn bt::ot_world_physics_stats get_stats();
+    ifc_fn void set_debug_draw_enabled(bool state);
+    ifc_fn void set_debug_drawer_mode(int debug_mode);
+
     ifc_event bool terrain_collisions(
         const void* context,
         const double3& center,
@@ -73,6 +79,8 @@ public:
         float lod_dimension,
         coid::dynarray<bt::triangle>& data,
         coid::dynarray<bt::tree_batch*>& trees);
+
+    ifc_event void tree_collisions(btRigidBody * obj, const btManifoldPoint * cp, uint32 tree_ident);
 
     void set_debug_draw(btIDebugDraw * debug_draw);
 	void debug_draw_world();
