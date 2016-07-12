@@ -31,7 +31,6 @@ struct tree_collision_pair
     btPersistentManifold * manifold;
     uint32 tree_identifier;
 
-
     bool operator==(const tree_collision_pair & tcp) const {
         return obj == tcp.obj && tree == tcp.tree;
     }
@@ -181,6 +180,7 @@ protected:
         _stats.total_time_ms = 0.f;
         _stats.tree_processing_time_ms = 0.f;
         _stats.triangle_processing_time_ms = 0.f;
+        _stats.tri_list_construction_time_ms = 0.f;
         _stats.triangles_processed_count = 0;
         _stats.trees_processed_count = 0;
         _stats.after_ot_phase_time_ms = 0;
