@@ -185,6 +185,8 @@ protected:
         _stats.trees_processed_count = 0;
         _stats.after_ot_phase_time_ms = 0;
         _stats.before_ot_phase_time_ms = 0;
+        _stats.broad_aabb_intersections_time_ms = 0.f;
+        _stats.broad_aabb_intersections_count = 0;
     };
 };
 
