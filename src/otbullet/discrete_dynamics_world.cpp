@@ -39,7 +39,6 @@ namespace ot {
         timer.reset();
         timer1.reset();
         reset_stats();
-
 #endif // _PROFILING_ENABLED
 
         if (0 != m_internalPreTickCallback) {
