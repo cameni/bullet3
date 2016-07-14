@@ -22,6 +22,7 @@ class btManifoldPoint;
 namespace bt {
     class constraint_info;
     class physics;
+    class sketch_debug_draw;
     struct ot_world_physics_stats;
 }
 extern bt::physics* BT;
