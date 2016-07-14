@@ -73,7 +73,7 @@ public:
     ifc_fn bt::ot_world_physics_stats* get_stats_ptr();
     ifc_fn void set_debug_draw_enabled(bool state);
     ifc_fn void set_debug_drawer_mode(int debug_mode);
-    ifc_fn void debug_draw_world(double3 cam_pos);
+    void debug_draw_world(double3 cam_pos);
 
     ifc_event bool terrain_collisions(
         const void* context,
