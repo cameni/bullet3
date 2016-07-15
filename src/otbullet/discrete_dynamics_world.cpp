@@ -21,7 +21,7 @@
 #include <comm/dynarray.h>
 
 #include <ot/glm/glm_ext.h>
-#if defined(_LIB) && defined(_DEBUG) 
+#if defined(_LIB) /* && defined(_DEBUG)   */
 extern coid::dynarray<bt::triangle> trijangle;
 extern bool e_broad_triss;
 extern coid::dynarray<double3> e_skw_pts;
@@ -128,6 +128,11 @@ namespace ot {
 #ifdef _PROFILING_ENABLED
         static coid::nsec_timer timer;
 #endif // _PROFILING_ENABLED
+
+#if defined(_LIB) /* && defined(_DEBUG)  */
+        e_skw_pts.clear();
+        trijangle.clear();
+#endif
 
         
         LOCAL_SINGLETON(ot_terrain_contact_common) common_data = new ot_terrain_contact_common(0.00f,this,_pb_wrap);
@@ -261,18 +266,13 @@ namespace ot {
 
                 get_obb(internal_obj_wrapper.getCollisionShape(), internal_obj_wrapper.getWorldTransform(), _from, _basis);
 
-#if defined(_LIB) && defined(_DEBUG)
-                e_skw_pts.clear();
-                trijangle.clear();
-#endif
-
                 //if(!_sphere_intersect(_context, _from , _rad , _lod_dim, _triangles, _trees)) {
                 if (!_aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _trees)) {
                     continue;
                 }
 
 				if (_triangles.size() > 0) {
-#if defined(_LIB) && defined(_DEBUG)
+#if defined(_LIB) /* && defined(_DEBUG)  */
                     if(e_broad_triss){
                         _triangles.for_each([&](const bt::triangle & t) {
                             trijangle.push(t);
