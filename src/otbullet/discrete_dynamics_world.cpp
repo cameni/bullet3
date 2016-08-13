@@ -21,21 +21,28 @@
 #include <comm/dynarray.h>
 
 #include <ot/glm/glm_ext.h>
-#ifdef _LIB
-extern coid::dynarray<bt::triangle> trijangle;
-#endif
 
-static const float g_temp_tree_rad = .2f;
+//static const float g_temp_tree_rad = .20f;
+
+const float g_sigma_coef = 1.f;
 
 namespace ot {
 
 	void discrete_dynamics_world::internalSingleStepSimulation(btScalar timeStep)
 	{
+#ifdef _PROFILING_ENABLED
+        static coid::nsec_timer timer;
+        static coid::nsec_timer timer1;
+        timer.reset();
+        timer1.reset();
+        reset_stats();
 
-		if (0 != m_internalPreTickCallback) {
+#endif // _PROFILING_ENABLED
+
+        if (0 != m_internalPreTickCallback) {
 			(*m_internalPreTickCallback)(this, timeStep);
 		}
-
+        
 		///apply gravity, predict motion
 		predictUnconstraintMotion(timeStep);
 
@@ -51,11 +58,19 @@ namespace ot {
 		///perform collision detection
 		performDiscreteCollisionDetection();
 
+#ifdef _PROFILING_ENABLED
+        _stats.before_ot_phase_time_ms = timer.time_ns() * 1e-6f;
+#endif // _PROFILING_ENABLED
+
 		//perform outerra terrain collision detecion
 
 //		ot_terrain_collision_step_cleanup();
 		ot_terrain_collision_step();
-		process_tree_collisions();
+		process_tree_collisions(timeStep);
+
+#ifdef _PROFILING_ENABLED
+        timer.reset();
+#endif // _PROFILING_ENABLED
 
 		calculateSimulationIslands();
 
@@ -81,6 +96,12 @@ namespace ot {
 		if (0 != m_internalTickCallback) {
 			(*m_internalTickCallback)(this, timeStep);
 		}
+
+#ifdef _PROFILING_ENABLED
+        _stats.after_ot_phase_time_ms = timer.time_ns() * 1e-6f;
+        _stats.total_time_ms = timer1.time_ns() * 1e-6f;
+#endif // _PROFILING_ENABLED
+
 	}
 
     void discrete_dynamics_world::removeRigidBody(btRigidBody * body)
@@ -100,8 +121,13 @@ namespace ot {
 	void discrete_dynamics_world::ot_terrain_collision_step()
 	{
         static uint32 frame_count;
-        LOCAL_SINGLETON(ot_terrain_contact_common) common_data = new ot_terrain_contact_common(0.00f,this,_pb_wrap);
+
+#ifdef _PROFILING_ENABLED
+        static coid::nsec_timer timer;
+#endif // _PROFILING_ENABLED
+
         
+        LOCAL_SINGLETON(ot_terrain_contact_common) common_data = new ot_terrain_contact_common(0.00f,this,_pb_wrap);
 		for (int i = 0; i < m_collisionObjects.size(); i++) {
 			_cow_internal.clear();
             _compound_processing_stack.clear();
@@ -228,22 +254,44 @@ namespace ot {
 				}
 
 				_triangles.clear();
-                _trees.clear();
+                _tree_batches.clear();
 
-                if(!_sphere_intersect(_context, _from, _rad, _lod_dim, _triangles, _trees))
+                get_obb(internal_obj_wrapper.getCollisionShape(), internal_obj_wrapper.getWorldTransform(), _from, _basis);
+
+                if (_debug_draw_terrain && _debug_terraing_trees && _debug_terrain_triangles) {
+                    _debug_terraing_trees->clear();
+                    _debug_terrain_triangles->clear();
+                }
+
+                //if(!_sphere_intersect(_context, _from , _rad , _lod_dim, _triangles, _trees)) {
+                if (!_aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches)) {
                     continue;
+                }
 
 				if (_triangles.size() > 0) {
-#ifdef _LIB
-                    _triangles.for_each([&](const bt::triangle & t) {
-                        trijangle.push(t);
-                    });
-#endif
+
+                    if (_debug_draw_terrain && _debug_terrain_triangles) {
+                        _triangles.for_each([&](const bt::triangle& t) {
+                            *_debug_terrain_triangles->push() = double3(t.a) + *t.parent_offset_p;
+                            *_debug_terrain_triangles->push() = double3(t.b) + *t.parent_offset_p;
+                            *_debug_terrain_triangles->push() = double3(t.c) + *t.parent_offset_p;
+                        });
+                    }
+
+#ifdef _PROFILING_ENABLED
+                    timer.reset();
+
+#endif // _PROFILING_ENABLED
                     common_data->process_triangle_cache(_triangles);
+#ifdef _PROFILING_ENABLED
+                    _stats.triangles_processed_count += _triangles.size();
+                    _stats.triangle_processing_time_ms += timer.time_ns() * 0.000001f;
+#endif // _PROFILING_ENABLED
+
 				}
 
-                if (_trees.size() > 0) {
-                    process_trees_cache(obj, _trees, frame_count);
+                if (_tree_batches.size() > 0) {
+                    prepare_tree_collision_pairs(obj, _tree_batches, frame_count);
                 }
 
 				common_data->process_collision_points();
@@ -264,20 +312,10 @@ namespace ot {
         ++frame_count;
 	}
 
-	void discrete_dynamics_world::ot_terrain_collision_step_cleanup()
-	{
-	/*	//zatial takto natvrdo
-		_manifolds.for_each([&](btPersistentManifold * m) {
-			getDispatcher()->releaseManifold(m);
-		});
-
-		_manifolds.clear();*/
-	}
-
-    void discrete_dynamics_world::process_trees_cache(btCollisionObject * cur_obj, const coid::dynarray<bt::tree_batch*>& trees_cache, uint32 frame)
+    void discrete_dynamics_world::prepare_tree_collision_pairs(btCollisionObject * cur_obj, const coid::dynarray<bt::tree_batch*>& tree_batches_cache, uint32 frame)
     {
-        for (uints i = 0; i < trees_cache.size(); i++) {
-            bt::tree_batch * tb = trees_cache[i];
+        for (uints i = 0; i < tree_batches_cache.size(); i++) {
+            bt::tree_batch * tb = tree_batches_cache[i];
             if (tb->last_frame_used == 0xffffffff) {
                 build_tb_collision_info(tb);
             }
@@ -285,19 +323,26 @@ namespace ot {
             tb->last_frame_used = frame;
 
             for (uint8 j = 0; j < tb->tree_count; j++) {
+                
+                if (_debug_draw_terrain && _debug_terraing_trees) {
+                    *_debug_terraing_trees->push() = tb->trees[j];
+                }
+
+                if (tb->trees[j].spring_force_uv[0] == -128 && tb->trees[j].spring_force_uv[1] != -128) // broken tree
+                    continue;
+
                 float3 p = float3(glm::normalize(tb->trees[j].pos)) * tb->trees[j].height;
                 float3 cen_rel(_from - tb->trees[j].pos);
-                if (coal::distance_point_segment_sqr(cen_rel, float3(0, 0, 0), p) < glm::pow(g_temp_tree_rad + _rad,2.f)) {
+                if (coal::distance_point_segment_sqr(cen_rel, float3(0, 0, 0), p) < glm::pow(tb->info(j)->tree_inf->radius + _rad,2.f)) {
                     tree_collision_pair tcp(cur_obj, tb->info(j));
-                    tree_collision_pair * cached_tcp = _tree_collision_pairs.find_if([&](tree_collision_pair _tcp) {
+                    tree_collision_pair * cached_tcp = _tree_collision_pairs.find_if([&](const tree_collision_pair& _tcp) {
                         return tcp == _tcp;
                     });
 
                     if (!cached_tcp) {
                         cached_tcp = _tree_collision_pairs.add();
-                        cached_tcp->obj = tcp.obj;
-                        cached_tcp->tree = tcp.tree;
-                        cached_tcp->manifold = getDispatcher()->getNewManifold(cur_obj, &tcp.tree->obj);
+                        cached_tcp->init_with(cur_obj,tcp.tree_col_info,tb->trees[j]);
+                        cached_tcp->manifold = getDispatcher()->getNewManifold(cached_tcp->obj, &cached_tcp->tree_col_info->obj);
                     }
                     
                     cached_tcp->reused = true;
@@ -317,14 +362,15 @@ namespace ot {
             btTransform t_trans;
             t_trans.setOrigin(btVector3(pos.x,pos.y,pos.z));
             t_trans.setRotation(btQuaternion(rot.x,rot.y,rot.z,rot.w));
-            btCapsuleShape * t_cap =  new (&tci->shape) btCapsuleShape(g_temp_tree_rad, t.height);
+            tci->tree_inf = &t;
+            btCapsuleShape * t_cap = new (&tci->shape) btCapsuleShape(t.radius, t.height);
             btCollisionObject * t_col = new (&tci->obj) btCollisionObject();
             t_col->setCollisionShape(t_cap);
             t_col->setWorldTransform(t_trans);
         }
     }
 
-	void discrete_dynamics_world::process_tree_collisions()
+    void discrete_dynamics_world::process_tree_collisions(btScalar time_step)
     {
         _tree_collision_pairs.for_each([&](tree_collision_pair&  tcp) {
             btDispatcher * dispatcher = getDispatcher();
@@ -336,14 +382,15 @@ namespace ot {
                 _tree_collision_pairs.del(&tcp);
                 return;
             }
-            
+
+            btRigidBody * rb_obj = btRigidBody::upcast(tcp.obj);
             btCollisionObjectWrapper obj1_wrapper(0, tcp.obj->getCollisionShape(), tcp.obj, tcp.obj->getWorldTransform(), -1, -1);
-            btCollisionObjectWrapper obj2_wrapper(0, &tcp.tree->shape, &tcp.tree->obj, tcp.tree->obj.getWorldTransform(), -1, -1);
+            btCollisionObjectWrapper obj2_wrapper(0, &tcp.tree_col_info->shape, &tcp.tree_col_info->obj, tcp.tree_col_info->obj.getWorldTransform(), -1, -1);
 
             btManifoldResult res(&obj1_wrapper, &obj2_wrapper);
             res.setPersistentManifold(manifold);
 
-            btCollisionAlgorithm * algo = dispatcher->findAlgorithm(&obj1_wrapper, &obj2_wrapper,manifold);
+            btCollisionAlgorithm * algo = dispatcher->findAlgorithm(&obj1_wrapper, &obj2_wrapper, manifold);
 
             if (algo) {
                 algo->processCollision(&obj1_wrapper, &obj2_wrapper, getDispatchInfo(), &res);
@@ -351,20 +398,93 @@ namespace ot {
                 dispatcher->freeCollisionAlgorithm(algo);
             }
 
-            res.refreshContactPoints();
             tcp.reused = false;
+            res.refreshContactPoints();
+
+            if (!tcp.tc_ctx.collision_started) {
+                if (manifold->getNumContacts()){ 
+                    btManifoldPoint& min_cp = manifold->getContactPoint(0);
+                    for (int i = 1; i < manifold->getNumContacts(); i++) {
+                        btManifoldPoint& tmp_cp = manifold->getContactPoint(i);
+                        if (tmp_cp.getDistance() < 0 && tmp_cp.getDistance() > min_cp.getDistance())
+                            min_cp = tmp_cp;
+                    }
+
+                    if (min_cp.getDistance() > 0) {
+                        manifold->clearManifold();
+                        return;
+                    }
+                    
+                    const float l = float(tcp.tree_col_info->shape.getHalfHeight() + min_cp.m_localPointB[tcp.tree_col_info->shape.getUpAxis()]);
+                    const float dp = float(rb_obj->getLinearVelocity().length() / (rb_obj->getInvMass()));
+
+                    float f = dp * tcp.tc_ctx.max_collision_duration_inv;
+                    float sig = (f*l*tcp.tree_col_info->tree_inf->radius) / tcp.tree_col_info->tree_inf->I;
+
+                    if (tcp.tree_col_info->tree_inf->sig_max <= sig) {
+                        tcp.tc_ctx.custom_handling = true;
+                        tcp.tc_ctx.braking_force = (tcp.tree_col_info->tree_inf->sig_max * tcp.tree_col_info->tree_inf->I) / (l*tcp.tree_col_info->tree_inf->radius);
+                        tcp.tc_ctx.force_apply_pt = min_cp.m_localPointA;
+                        tcp.tc_ctx.force_dir = -rb_obj->getLinearVelocity().normalized();  
+                        tcp.tc_ctx.orig_tree_dir = rb_obj->getWorldTransform().getOrigin().normalized();
+                        tcp.tc_ctx.l = l;
+                     }
+
+                    tcp.tc_ctx.collision_started = true;
+                }
+            }
+
+            if (tcp.tc_ctx.custom_handling) {
+                if (tcp.tc_ctx.collision_duration < tcp.tc_ctx.max_collision_duration) {
+                    _tree_collision(rb_obj, tcp.tc_ctx,float(time_step));
+                }
+
+                manifold->clearManifold();
+            }
         });
-	}
+    }
+
+    void discrete_dynamics_world::get_obb(const btCollisionShape * cs,const btTransform& t, double3& cen, float3x3& basis)
+    {
+        btVector3 min, max;
+        cs->getAabb(btTransform::getIdentity(), min, max);
+        btVector3 bt_cen = (min + max) * btScalar(0.5);
+        btVector3 half = max - bt_cen;
+        bt_cen += t.getOrigin();
+        btMatrix3x3 bt_basis;
+        bt_basis[0] = t.getBasis() * btVector3(half[0], 0, 0);
+        bt_basis[1] = t.getBasis() * btVector3(0, half[1], 0);
+        bt_basis[2] = t.getBasis() * btVector3(0, 0, half[2]);
+
+        cen = double3( bt_cen[0], bt_cen[1], bt_cen[2] );
+        basis[0] = float3(bt_basis[0][0], bt_basis[0][1], bt_basis[0][2]);
+        basis[1] = float3(bt_basis[1][0], bt_basis[1][1], bt_basis[1][2]);
+        basis[2] = float3(bt_basis[2][0], bt_basis[2][1], bt_basis[2][2]);
+    }
+
+    void discrete_dynamics_world::oob_to_aabb(const btVector3 & src_cen, const btMatrix3x3 & src_basis, const btVector3 & dst_cen, const btMatrix3x3 & dst_basis, btVector3 & aabb_cen, btVector3 & aabb_half)
+    {
+        aabb_cen = src_cen - dst_cen;
+        aabb_half[0] = dst_basis[0].dot(src_basis[0]) + dst_basis[0].dot(src_basis[1]) + dst_basis[0].dot(src_basis[2]);
+        aabb_half[1] = dst_basis[1].dot(src_basis[0]) + dst_basis[0].dot(src_basis[1]) + dst_basis[0].dot(src_basis[2]);
+        aabb_half[2] = dst_basis[2].dot(src_basis[0]) + dst_basis[0].dot(src_basis[1]) + dst_basis[0].dot(src_basis[2]);
+    }
 
 	discrete_dynamics_world::discrete_dynamics_world(btDispatcher * dispatcher, 
 		btBroadphaseInterface * pairCache, 
 		btConstraintSolver * constraintSolver, 
 		btCollisionConfiguration * collisionConfiguration,
         fn_ext_collision ext_collider,
+        fn_process_tree_collision ext_tree_col,
 		const void* context)
 		: btDiscreteDynamicsWorld(dispatcher,pairCache,constraintSolver,collisionConfiguration)
         , _sphere_intersect(ext_collider)
+        , _tree_collision(ext_tree_col)
 		, _context(context)
+
+        , _debug_draw_terrain(false)
+        , _debug_terrain_triangles(0)
+        , _debug_terraing_trees(0)
 	{
 		btTriangleShape * ts = new btTriangleShape();
 		ts->setMargin(0.0f);

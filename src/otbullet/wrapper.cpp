@@ -15,6 +15,7 @@
 
 #include "otbullet.hpp"
 #include "physics_cfg.h"
+#include "sketch_debug_draw.h"
 
 #include <comm/ref_i.h>
 #include <comm/commexception.h>
@@ -36,6 +37,18 @@ extern bool _ext_collider(const void* context,
 	coid::dynarray<bt::triangle>& data,
 	coid::dynarray<bt::tree_batch*>& trees);
 
+extern bool _ext_collider_obb(
+    const void * context,
+    const double3& center,
+    const float3x3& basis,
+    float lod_dimension,
+    coid::dynarray<bt::triangle>& data,
+    coid::dynarray<bt::tree_batch*>& trees);
+
+
+extern void _ext_tree_col(btRigidBody * obj, 
+        bt::tree_collision_contex & ctx,
+    float time_step);
 #else
 
 static bool _ext_collider(
@@ -49,19 +62,40 @@ static bool _ext_collider(
     return _physics->terrain_collisions(planet, center, radius, lod_dimension, data, trees);
 }
 
+static bool _ext_collider_obb(
+    const void * planet,
+    const double3& center,
+    const float3x3& basis,
+    float lod_dimension,
+    coid::dynarray<bt::triangle>& data,
+    coid::dynarray<bt::tree_batch*>& trees) 
+{
+    return _physics->terrain_collisions_aabb(planet, center, basis, lod_dimension, data, trees);
+}
+
+static void _ext_tree_col(btRigidBody * obj,
+    bt::tree_collision_contex & ctx,
+    float time_step) {
+
+}
+
+static void _ext_debug_draw_terraing(const coid::dynarray<double3>& debug_triangles,
+    const coid::dynarray<bt::tree>& debug_tree) {
+
+}
+
 #endif
 
-
-
-void set_debug_drawer(btIDebugDraw * debug_draw) {
-    if (_physics) {
-        _physics->set_debug_draw(debug_draw);
-    }
-}
 
 void debug_draw_world() {
     if (_physics) {
         _physics->debug_draw_world();
+    }
+}
+
+void set_debug_drawer_enabled(btIDebugDraw * debug_draw) {
+    if (_physics) {
+        _physics->set_debug_draw_enabled(debug_draw);
     }
 }
 
@@ -78,18 +112,26 @@ iref<physics> physics::create(double r, void* context)
     _overlappingPairCache = new bt32BitAxisSweep3(worldMin, worldMax);
     _constraintSolver = new btSequentialImpulseConstraintSolver();
 
-	ot::discrete_dynamics_world * wrld = new ot::discrete_dynamics_world(
-		_dispatcher,
-		_overlappingPairCache,
-		_constraintSolver,
-		_collisionConfiguration,
+    ot::discrete_dynamics_world * wrld = new ot::discrete_dynamics_world(
+        _dispatcher,
+        _overlappingPairCache,
+        _constraintSolver,
+        _collisionConfiguration,
         &_ext_collider,
+        &_ext_tree_col,
 		context
         );
+
+    wrld->_aabb_intersect = &_ext_collider_obb;
 
     _physics->_world = wrld;
 
     _physics->_world->setForceUpdateAllAabbs(false);
+
+    _physics->_dbg_drawer = nullptr;
+   
+    // default mode
+    _physics->_dbg_draw_mode = btIDebugDraw::DBG_DrawContactPoints | btIDebugDraw::DBG_DrawWireframe;    
 
     return _physics;
 }
@@ -103,14 +145,10 @@ iref<physics> physics::get()
 	return _physics;
 }
 
-void physics::set_debug_draw(btIDebugDraw * debug_draw) {
-	if (_physics->_world) {
-		_physics->_world->setDebugDrawer(debug_draw);
-	}
-}
-
 void physics::debug_draw_world() {
-    _physics->_world->debugDrawWorld();
+    if (_dbg_drawer) {
+        _world->debugDrawWorld();
+    }
 }
 
 
@@ -248,4 +286,37 @@ void physics::ray_test( const double from[3], const double to[3], void* cb)
 {
     _world->rayTest(*(const btVector3*)from, *(const btVector3*)to,
         *(btCollisionWorld::RayResultCallback*)cb);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bt::ot_world_physics_stats physics::get_stats() {
+    return ((ot::discrete_dynamics_world*)(_world))->get_stats();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bt::ot_world_physics_stats* physics::get_stats_ptr() {
+    return const_cast<bt::ot_world_physics_stats*>(&((ot::discrete_dynamics_world*)(_world))->get_stats());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void physics::set_debug_draw_enabled(btIDebugDraw * debug_drawer) {
+    _dbg_drawer = debug_drawer;
+    ((ot::discrete_dynamics_world*)_world)->setDebugDrawer(debug_drawer);
+
+    if (debug_drawer) {
+        debug_drawer->setDebugMode(_dbg_draw_mode);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void physics::set_debug_drawer_mode(int debug_mode) {
+    _dbg_draw_mode = debug_mode;
+
+    if (_dbg_drawer) {
+        _dbg_drawer->setDebugMode(debug_mode);
+    }
 }

@@ -7,6 +7,8 @@
 class rigid_body_constraint;
 class terrain_mesh;
 
+class btRigidBody;
+
 namespace bt {
 
 enum EShape {
@@ -66,18 +68,27 @@ struct tree
 {
     double3 pos;
     //quat rot;
+    float I;
+    float E;
+    float sig_max;
+    float radius;
     float height;
-
+    float max_flex;
+    int8 * spring_force_uv;
+    uint16 identifier;
     //uint8 objbuf[sizeof(btCollisionObject)];
     //uint8 shapebuf[sizeof(btCapsuleShape)];
 };
 
+//
 struct tree_collision_info
 {
     btCollisionObject obj;
     btCapsuleShape shape;
+    const tree * tree_inf;
 };
 
+//
 struct tree_batch
 {
     const terrain_mesh* tm;
@@ -91,6 +102,58 @@ struct tree_batch
     ~tree_batch() {
         tree_count = 0;
     }
+};
+
+//
+struct tree_resolving_data {
+    void * btRigidBody;
+    float penetration_depth;
+    float3 tree_spring_direction;
+    uint16 tree_identifier;
+};
+
+//
+struct tree_collision_contex {
+    uint32 tree_identifier;
+    float l;
+    float braking_force;
+    float collision_duration;
+    bool collision_started;
+    bool custom_handling;
+    btVector3 force_apply_pt;
+    btVector3 force_dir;
+    btVector3 orig_tree_dir;
+
+    const float max_collision_duration = 0.15f;
+    const float max_collision_duration_inv = 1.0f / 0.15f;
+
+    float just_temp_r;
+
+    tree_collision_contex() 
+        : tree_identifier(0xffffffff)
+    , braking_force(0)
+    , collision_duration(0)
+    , collision_started(false)
+    , custom_handling(false)
+    , force_apply_pt(0,0,0)
+    , force_dir(0,0,0)
+    , orig_tree_dir(0,0,0)
+    {}
+};
+
+//
+struct ot_world_physics_stats {
+    uint32 triangles_processed_count;
+    uint32 trees_processed_count;
+    float total_time_ms;
+    float broad_phase_time_ms;
+    float triangle_processing_time_ms;
+    float tree_processing_time_ms;
+    float after_ot_phase_time_ms;
+    float before_ot_phase_time_ms;
+    float tri_list_construction_time_ms;
+    float broad_aabb_intersections_time_ms;
+    uint32 broad_aabb_intersections_count;
 };
 
 //
@@ -111,5 +174,4 @@ public:
     rigid_body_constraint* _constraint;
 };
 
-
-} //namespace bt
+}; //namespace bt
