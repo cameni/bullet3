@@ -32,7 +32,7 @@ private:
     {
         if(_vtable1) return _vtable1;
 
-        _vtable1 = new ifn_t[27];
+        _vtable1 = new ifn_t[32];
         _vtable1[0] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(double)>(&::physics::step_simulation));
         _vtable1[1] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(const double[3],const double[3],void*)>(&::physics::ray_test));
         _vtable1[2] = reinterpret_cast<ifn_t>(static_cast<btRigidBody*(policy_intrusive_base::*)()>(&::physics::fixed_object));
@@ -60,6 +60,11 @@ private:
         _vtable1[24] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(btCollisionShape*,const float[3])>(&::physics::add_convex_point));
         _vtable1[25] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(btCollisionShape*)>(&::physics::close_convex_shape));
         _vtable1[26] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(btCollisionShape*&)>(&::physics::destroy_shape));
+        _vtable1[27] = reinterpret_cast<ifn_t>(static_cast<bt::ot_world_physics_stats(policy_intrusive_base::*)()>(&::physics::get_stats));
+        _vtable1[28] = reinterpret_cast<ifn_t>(static_cast<bt::ot_world_physics_stats*(policy_intrusive_base::*)()>(&::physics::get_stats_ptr));
+        _vtable1[29] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(btIDebugDraw*)>(&::physics::set_debug_draw_enabled));
+        _vtable1[30] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)(int)>(&::physics::set_debug_drawer_mode));
+        _vtable1[31] = reinterpret_cast<ifn_t>(static_cast<void(policy_intrusive_base::*)()>(&::physics::debug_draw_world));
         return _vtable1;
     }
 
@@ -71,7 +76,7 @@ private:
         if(_vtable2) return _vtable2;
         ifn_t* vtable1 = get_vtable();
 
-        _vtable2 = new ifn_t[27];
+        _vtable2 = new ifn_t[32];
         _vtable2[0] = vtable1[0];
         _vtable2[1] = vtable1[1];
         _vtable2[2] = vtable1[2];
@@ -99,6 +104,11 @@ private:
         _vtable2[24] = vtable1[24];
         _vtable2[25] = vtable1[25];
         _vtable2[26] = vtable1[26];
+        _vtable2[27] = vtable1[27];
+        _vtable2[28] = vtable1[28];
+        _vtable2[29] = vtable1[29];
+        _vtable2[30] = vtable1[30];
+        _vtable2[31] = vtable1[31];
         return _vtable2;
     }
 
@@ -176,9 +186,9 @@ public:
             "bt::physics@wrapper", (void*)&_generic_interface_creator);
 
         interface_register::register_interface_creator(
-            "bt::physics.create@1720228644", (void*)&create);
+            "bt::physics.create@3954098276", (void*)&create);
         interface_register::register_interface_creator(
-            "bt::physics.get@1720228644", (void*)&get);
+            "bt::physics.get@3954098276", (void*)&get);
 
         return (void*)&register_interfaces;
     }
@@ -208,6 +218,30 @@ bool physics::terrain_collisions( const void* context, const double3& center, fl
         throw coid::exception() << "terrain_collisions" << " handler not implemented";
     else
         return _ifc_host->iface<bt::physics>()->terrain_collisions(context, center, radius, lod_dimension, data, trees);
+}
+
+bool physics::terrain_collisions_aabb( const void* context, const double3& center, float3x3 basis, float lod_dimension, coid::dynarray<bt::triangle>& data, coid::dynarray<bt::tree_batch*>& trees )
+{
+	if(!_ifc_host) 
+        throw coid::exception() << "terrain_collisions_aabb" << " handler not implemented";
+    else
+        return _ifc_host->iface<bt::physics>()->terrain_collisions_aabb(context, center, basis, lod_dimension, data, trees);
+}
+
+float3 physics::tree_collisions( btRigidBody* obj, bt::tree_collision_contex& ctx, float time_step )
+{
+	if(!_ifc_host) 
+        throw coid::exception() << "tree_collisions" << " handler not implemented";
+    else
+        return _ifc_host->iface<bt::physics>()->tree_collisions(obj, ctx, time_step);
+}
+
+void physics::log( const coid::token& text )
+{
+	if(!_ifc_host) 
+        throw coid::exception() << "log" << " handler not implemented";
+    else
+        return _ifc_host->iface<bt::physics>()->log(text);
 }
 
 
