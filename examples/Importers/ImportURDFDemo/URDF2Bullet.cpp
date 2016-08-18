@@ -143,7 +143,7 @@ void InitURDF2BulletCache(const URDFImporterInterface& u2b, URDF2BulletCachedDat
 
 }
 
-void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreationInterface& creation, URDF2BulletCachedData& cache, int urdfLinkIndex, const btTransform& parentTransformInWorldSpace, btMultiBodyDynamicsWorld* world1,bool createMultiBody, const char* pathPrefix)
+void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreationInterface& creation, URDF2BulletCachedData& cache, int urdfLinkIndex, const btTransform& parentTransformInWorldSpace, btMultiBodyDynamicsWorld* world1,bool createMultiBody, const char* pathPrefix, bool useSDF = false)
 {
     //b3Printf("start converting/extracting data from URDF interface\n");
 
@@ -195,16 +195,28 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
     btVector3 jointAxisInJointSpace;
     btScalar jointLowerLimit;
     btScalar jointUpperLimit;
+    btScalar jointDamping;
+    btScalar jointFriction;
 
 
-    bool hasParentJoint = u2b.getJointInfo(urdfLinkIndex, parent2joint, jointAxisInJointSpace, jointType,jointLowerLimit,jointUpperLimit);
-
-
-    linkTransformInWorldSpace =parentTransformInWorldSpace*parent2joint;
-
-    int graphicsIndex = u2b.convertLinkVisualShapes(urdfLinkIndex,pathPrefix,localInertialFrame);
+    bool hasParentJoint = u2b.getJointInfo(urdfLinkIndex, parent2joint, linkTransformInWorldSpace, jointAxisInJointSpace, jointType,jointLowerLimit,jointUpperLimit, jointDamping, jointFriction);
+    if (useSDF)
+    {
+        parent2joint =parentTransformInWorldSpace.inverse()*linkTransformInWorldSpace;
+    }
+    else
+    {
+        linkTransformInWorldSpace =parentTransformInWorldSpace*parent2joint;
+    }
+    
+    
 
     btCompoundShape* compoundShape = u2b.convertLinkCollisionShapes(urdfLinkIndex,pathPrefix,localInertialFrame);
+	
+	int graphicsIndex = u2b.convertLinkVisualShapes(urdfLinkIndex,pathPrefix,localInertialFrame);
+	
+	
+
 
     if (compoundShape)
     {
@@ -217,11 +229,17 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
             color.setValue(visual->material->color.r,visual->material->color.g,visual->material->color.b);//,visual->material->color.a);
          }
          */
-        //btVector3 localInertiaDiagonal(0, 0, 0);
-        //if (mass)
-        //{
-        //	shape->calculateLocalInertia(mass, localInertiaDiagonal);
-        //}
+        if (mass)
+        {
+        	compoundShape->calculateLocalInertia(mass, localInertiaDiagonal);
+            URDFLinkContactInfo contactInfo;
+            u2b.getLinkContactInfo(urdfLinkIndex,contactInfo);
+            //temporary inertia scaling until we load inertia from URDF
+            if (contactInfo.m_flags & URDF_CONTACT_HAS_INERTIA_SCALING)
+            {
+                localInertiaDiagonal*=contactInfo.m_inertiaScaling;
+            }
+        }
 
         btRigidBody* linkRigidBody = 0;
         btTransform inertialFrameInWorldSpace = linkTransformInWorldSpace*localInertialFrame;
@@ -237,6 +255,8 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
 
             creation.createRigidBodyGraphicsInstance(urdfLinkIndex, body, color, graphicsIndex);
             cache.registerRigidBody(urdfLinkIndex, body, inertialFrameInWorldSpace, mass, localInertiaDiagonal, compoundShape, localInertialFrame);
+            
+            //untested: u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,body);
         } else
         {
             if (cache.m_bulletMultiBody==0)
@@ -297,6 +317,8 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
                                                                   offsetInA.inverse().getRotation()*offsetInB.getRotation(), quatRotate(offsetInB.inverse().getRotation(),jointAxisInJointSpace), offsetInA.getOrigin(),//parent2joint.getOrigin(),
                                                                   -offsetInB.getOrigin(),
                                                                   disableParentCollision);
+						cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointDamping = jointDamping;
+						cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointFriction= jointFriction;
                         creation.addLinkMapping(urdfLinkIndex,mbLinkIndex);
 
                     } else
@@ -374,10 +396,21 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
                 btVector4 color = selectColor2();//(0.0,0.0,0.5);
 				u2b.getLinkColor(urdfLinkIndex,color);
                 creation.createCollisionObjectGraphicsInstance(urdfLinkIndex,col,color);
+                
+                u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,col, u2b.getBodyUniqueId());
 
-                btScalar friction = 0.5f;
+				URDFLinkContactInfo contactInfo;
+				u2b.getLinkContactInfo(urdfLinkIndex,contactInfo);
 
-                col->setFriction(friction);
+				if ((contactInfo.m_flags & URDF_CONTACT_HAS_LATERAL_FRICTION)!=0)
+				{
+					col->setFriction(contactInfo.m_lateralFriction);
+				}
+				if ((contactInfo.m_flags & URDF_CONTACT_HAS_ROLLING_FRICTION)!=0)
+				{
+					col->setRollingFriction(contactInfo.m_rollingFriction);
+				}
+				
 
                 if (mbLinkIndex>=0) //???? double-check +/- 1
                 {
@@ -387,6 +420,9 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
                     cache.m_bulletMultiBody->setBaseCollider(col);
                 }
             }
+        } else
+        {
+            //u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,compoundShape);
         }
     }
 
@@ -400,18 +436,18 @@ void ConvertURDF2BulletInternal(const URDFImporterInterface& u2b, MultiBodyCreat
     {
         int urdfChildLinkIndex = urdfChildIndices[i];
 
-        ConvertURDF2BulletInternal(u2b,creation, cache,urdfChildLinkIndex,linkTransformInWorldSpace,world1,createMultiBody,pathPrefix);
+        ConvertURDF2BulletInternal(u2b,creation, cache,urdfChildLinkIndex,linkTransformInWorldSpace,world1,createMultiBody,pathPrefix,useSDF);
     }
 
 }
 
-void ConvertURDF2Bullet(const URDFImporterInterface& u2b, MultiBodyCreationInterface& creation, const btTransform& rootTransformInWorldSpace, btMultiBodyDynamicsWorld* world1,bool createMultiBody, const char* pathPrefix)
+void ConvertURDF2Bullet(const URDFImporterInterface& u2b, MultiBodyCreationInterface& creation, const btTransform& rootTransformInWorldSpace, btMultiBodyDynamicsWorld* world1,bool createMultiBody, const char* pathPrefix, bool useSDF = false)
 {
     URDF2BulletCachedData cache;
 
     InitURDF2BulletCache(u2b,cache);
     int urdfLinkIndex = u2b.getRootLinkIndex();
-    ConvertURDF2BulletInternal(u2b, creation, cache, urdfLinkIndex,rootTransformInWorldSpace,world1,createMultiBody,pathPrefix);
+    ConvertURDF2BulletInternal(u2b, creation, cache, urdfLinkIndex,rootTransformInWorldSpace,world1,createMultiBody,pathPrefix,useSDF);
 
 	if (world1 && cache.m_bulletMultiBody)
 	{

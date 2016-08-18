@@ -14,7 +14,7 @@ protected:
 	
 	
 public:
-	PhysicsServerSharedMemory();
+	PhysicsServerSharedMemory(class SharedMemoryInterface* sharedMem=0);
 	virtual ~PhysicsServerSharedMemory();
 
 	virtual void setSharedMemoryKey(int key);
@@ -25,6 +25,8 @@ public:
 	virtual void disconnectSharedMemory (bool deInitializeSharedMemory);
 
 	virtual void processClientCommands();
+
+	virtual void stepSimulationRealTime(double dtInSec);
 
 	//bool	supportsJointMotor(class btMultiBody* body, int linkIndex);
 
@@ -43,6 +45,7 @@ public:
 	void enableCommandLogging(bool enable, const char* fileName);
 	void replayFromLogFile(const char* fileName);
 	
+	void resetDynamicsWorld();
 
 };
 

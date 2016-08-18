@@ -226,7 +226,7 @@ public:
 				{
 					char relativeFileName[1024];
 					sprintf(relativeFileName,"%s%s",prefix[i],filename);
-					image = stbi_load(relativeFileName, &width, &height, &n, 0);
+					image = stbi_load(relativeFileName, &width, &height, &n, 3);
 				}
 				
 				b3Assert(image);
@@ -265,8 +265,9 @@ public:
 	
     virtual void	stepSimulation(float deltaTime)
     {
+#ifndef BT_NO_PROFILE
 		CProfileManager::Reset();
-		
+#endif
 		
 		
 		
@@ -314,7 +315,9 @@ public:
 	
 	
 		 m_app->m_renderer->writeTransforms();
+#ifndef BT_NO_PROFILE
 		 CProfileManager::Increment_Frame_Counter();
+#endif
     }
     virtual void	renderScene()
     {

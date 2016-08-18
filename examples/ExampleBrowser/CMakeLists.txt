@@ -1,20 +1,135 @@
 
-
 INCLUDE_DIRECTORIES(
 	.
 	${BULLET_PHYSICS_SOURCE_DIR}/src
 	${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs
 )
 
-FILE(GLOB ExampleBrowser_SRCS "*" "GwenGUISupport/*" )
-FILE(GLOB ExampleBrowser_HDRS "*" "GwenGUISupport/*" )
+FILE(GLOB GwenGUISupport_SRCS  "GwenGUISupport/*" )
+FILE(GLOB GwenGUISupport_HDRS  "GwenGUISupport/*" )
 
 
+IF (WIN32)
+        INCLUDE_DIRECTORIES(
+                ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew
+        )
+				ADD_DEFINITIONS(-DGLEW_STATIC)
+ELSE(WIN32)
+        IF(APPLE)
+                find_library(COCOA NAMES Cocoa)
+  			ELSE(APPLE)
+                ADD_DEFINITIONS("-DGLEW_INIT_OPENGL11_FUNCTIONS=1")
+                ADD_DEFINITIONS("-DGLEW_STATIC")
+                ADD_DEFINITIONS("-DGLEW_DYNAMIC_LOAD_ALL_GLX_FUNCTIONS=1")
+                INCLUDE_DIRECTORIES( ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew )
+     		ENDIF(APPLE)
+ENDIF(WIN32)
 
-SET(App_ExampleBrowser_SRCS
-	main.cpp
-	ExampleEntries.cpp
-	ExampleEntries.h
+
+ADD_LIBRARY(BulletExampleBrowserLib
+	OpenGLExampleBrowser.cpp
+	OpenGLGuiHelper.cpp
+	GL_ShapeDrawer.cpp
+	CollisionShape2TriangleMesh.cpp
+	CollisionShape2TriangleMesh.h
+	../Utils/b3Clock.cpp
+	../Utils/b3Clock.h
+	../Utils/b3ResourcePath.cpp
+	../Utils/b3ResourcePath.h
+	${GwenGUISupport_SRCS}
+	${GwenGUISupport_HDRS}
+	
+)
+
+SET_TARGET_PROPERTIES(BulletExampleBrowserLib PROPERTIES VERSION ${BULLET_VERSION})
+SET_TARGET_PROPERTIES(BulletExampleBrowserLib PROPERTIES SOVERSION ${BULLET_VERSION})
+IF (BUILD_SHARED_LIBS)
+		IF (WIN32)
+                TARGET_LINK_LIBRARIES(
+                        BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils
+                        BulletInverseDynamics LinearMath OpenGLWindow gwen
+                        ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+                )
+		ELSE(WIN32)
+        IF(APPLE)
+                 TARGET_LINK_LIBRARIES(
+                                BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils
+                                BulletInverseDynamics LinearMath OpenGLWindow gwen
+                                ${COCOA} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+                 )
+  			ELSE(APPLE)
+                 TARGET_LINK_LIBRARIES(
+                                BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils
+                                BulletInverseDynamics LinearMath OpenGLWindow gwen
+                                pthread dl
+                        )
+        ENDIF(APPLE)
+	ENDIF(WIN32)
+ENDIF(BUILD_SHARED_LIBS)
+
+####################
+#
+# Bullet Example Browser main app
+#
+####################
+
+INCLUDE_DIRECTORIES(
+        .
+        ${BULLET_PHYSICS_SOURCE_DIR}/src
+        ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs
+)
+
+
+LINK_LIBRARIES(
+        BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils BulletInverseDynamics LinearMath OpenGLWindow gwen
+)
+
+IF (WIN32)
+	INCLUDE_DIRECTORIES(
+		${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew
+	)
+	LINK_LIBRARIES(
+		${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+	)
+	ADD_DEFINITIONS(-DGLEW_STATIC)
+ELSE(WIN32)
+	IF(APPLE)
+                find_library(COCOA NAMES Cocoa)
+                MESSAGE(${COCOA})
+                link_libraries(${COCOA} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
+  ELSE(APPLE)
+		ADD_DEFINITIONS("-DGLEW_INIT_OPENGL11_FUNCTIONS=1")
+		ADD_DEFINITIONS("-DGLEW_STATIC")
+		ADD_DEFINITIONS("-DGLEW_DYNAMIC_LOAD_ALL_GLX_FUNCTIONS=1")
+		INCLUDE_DIRECTORIES( ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew )
+		LINK_LIBRARIES( pthread dl)
+	ENDIF(APPLE)
+ENDIF(WIN32)
+
+
+SET(ExtendedTutorialsSources
+	../ExtendedTutorials/SimpleBox.cpp
+	../ExtendedTutorials/MultipleBoxes.cpp
+	../ExtendedTutorials/SimpleJoint.cpp
+	../ExtendedTutorials/SimpleCloth.cpp
+	../ExtendedTutorials/Chain.cpp 
+	../ExtendedTutorials/Bridge.cpp 
+	../ExtendedTutorials/RigidBodyFromObj.cpp
+	../ExtendedTutorials/InclinedPlane.cpp
+	../ExtendedTutorials/InclinedPlane.h
+	../ExtendedTutorials/NewtonsCradle.cpp
+)
+
+SET(BulletExampleBrowser_SRCS
+	
+	../TinyRenderer/geometry.cpp
+	../TinyRenderer/model.cpp
+	../TinyRenderer/tgaimage.cpp
+	../TinyRenderer/our_gl.cpp
+	../TinyRenderer/TinyRenderer.cpp
+	../SharedMemory/TinyRendererVisualShapeConverter.cpp
+	../SharedMemory/TinyRendererVisualShapeConverter.h
+	../RenderingExamples/TinyRendererSetup.cpp
 	../SharedMemory/PhysicsServer.cpp
 	../SharedMemory/PhysicsClientSharedMemory.cpp
 	../SharedMemory/PhysicsClient.cpp
@@ -23,11 +138,13 @@ SET(App_ExampleBrowser_SRCS
 	../SharedMemory/PhysicsClientExample.cpp
 	../SharedMemory/PosixSharedMemory.cpp
 	../SharedMemory/Win32SharedMemory.cpp
+	../SharedMemory/InProcessMemory.cpp
 	../SharedMemory/PhysicsServerSharedMemory.cpp
 	../SharedMemory/PhysicsDirect.cpp
 	../SharedMemory/PhysicsDirect.h
 	../SharedMemory/PhysicsDirectC_API.cpp
 	../SharedMemory/PhysicsDirectC_API.h
+	../SharedMemory/SharedMemoryInProcessPhysicsC_API.cpp
 	../SharedMemory/PhysicsLoopBack.cpp
 	../SharedMemory/PhysicsLoopBack.h
 	../SharedMemory/PhysicsLoopBackC_API.cpp
@@ -38,12 +155,30 @@ SET(App_ExampleBrowser_SRCS
 	../BasicDemo/BasicExample.h
 	../InverseDynamics/InverseDynamicsExample.cpp
 	../InverseDynamics/InverseDynamicsExample.h
+	../InverseKinematics/InverseKinematicsExample.cpp
+	../InverseKinematics/InverseKinematicsExample.h
 	../ForkLift/ForkLiftDemo.cpp
 	../ForkLift/ForkLiftDemo.h
 	../Tutorial/Tutorial.cpp
 	../Tutorial/Tutorial.h
 	../Tutorial/Dof6ConstraintTutorial.cpp
 	../Tutorial/Dof6ConstraintTutorial.h
+	../ExtendedTutorials/SimpleBox.cpp
+	../ExtendedTutorials/SimpleBox.h
+	../ExtendedTutorials/MultipleBoxes.cpp
+	../ExtendedTutorials/MultipleBoxes.h
+	../ExtendedTutorials/SimpleCloth.cpp
+	../ExtendedTutorials/SimpleCloth.h
+	../ExtendedTutorials/SimpleJoint.cpp
+	../ExtendedTutorials/SimpleJoint.h
+	../ExtendedTutorials/NewtonsCradle.cpp
+	../ExtendedTutorials/NewtonsCradle.h
+	../ExtendedTutorials/NewtonsRopeCradle.cpp
+	../ExtendedTutorials/NewtonsRopeCradle.h
+	../ExtendedTutorials/InclinedPlane.cpp
+	../ExtendedTutorials/InclinedPlane.h
+	../ExtendedTutorials/MultiPendulum.cpp
+	../ExtendedTutorials/MultiPendulum.h
 	../Collision/CollisionSdkC_Api.cpp
 	../Collision/CollisionSdkC_Api.h
 	../Collision/CollisionTutorialBullet2.cpp
@@ -75,7 +210,12 @@ SET(App_ExampleBrowser_SRCS
 	../RenderingExamples/TimeSeriesCanvas.h
 	../RenderingExamples/TimeSeriesFontData.cpp
 	../RenderingExamples/TimeSeriesFontData.h
-
+	../RoboticsLearning/GripperGraspExample.cpp
+	../RoboticsLearning/GripperGraspExample.h
+	../RoboticsLearning/b3RobotSimAPI.cpp
+	../RoboticsLearning/b3RobotSimAPI.h
+	../RoboticsLearning/R2D2GraspExample.cpp
+	../RoboticsLearning/R2D2GraspExample.h
 	../RenderingExamples/CoordinateSystemDemo.cpp
 	../RenderingExamples/CoordinateSystemDemo.h
 	../RenderingExamples/RaytracerSetup.cpp
@@ -91,11 +231,14 @@ SET(App_ExampleBrowser_SRCS
 		../Importers/ImportBsp/BspConverter.h
  	../Importers/ImportBullet/SerializeSetup.cpp
 	../Importers/ImportBullet/SerializeSetup.h
-
+	../Importers/ImportMeshUtility/b3ImportMeshUtility.cpp
+../Importers/ImportMeshUtility/b3ImportMeshUtility.h
 	../../Extras/Serialize/BulletWorldImporter/btWorldImporter.cpp
 	../../Extras/Serialize/BulletWorldImporter/btBulletWorldImporter.cpp
-../../Extras/Serialize/BulletFileLoader/bChunk.cpp		../../Extras/Serialize/BulletFileLoader/bFile.cpp
-../../Extras/Serialize/BulletFileLoader/bDNA.cpp		../../Extras/Serialize/BulletFileLoader/btBulletFile.cpp
+	../../Extras/Serialize/BulletFileLoader/bChunk.cpp		
+	../../Extras/Serialize/BulletFileLoader/bFile.cpp
+	../../Extras/Serialize/BulletFileLoader/bDNA.cpp		
+	../../Extras/Serialize/BulletFileLoader/btBulletFile.cpp
 
 	../Importers/ImportBsp/BspLoader.h
   ../Importers/ImportBsp/ImportBspExample.h
@@ -121,6 +264,7 @@ SET(App_ExampleBrowser_SRCS
   ../Importers/ImportObjDemo/LoadMeshFromObj.cpp
   ../Importers/ImportObjDemo/Wavefront2GLInstanceGraphicsShape.cpp
   ../Importers/ImportSTLDemo/ImportSTLSetup.cpp
+ ../Importers/ImportSDFDemo/ImportSDFSetup.cpp
   ../Importers/ImportURDFDemo/ImportURDFSetup.cpp
   ../Importers/ImportURDFDemo/URDF2Bullet.cpp
   ../Importers/ImportURDFDemo/MyMultiBodyCreator.cpp
@@ -137,6 +281,7 @@ SET(App_ExampleBrowser_SRCS
   ../Vehicles/Hinge2Vehicle.cpp
   ../Vehicles/Hinge2Vehicle.h
   ../MultiBody/Pendulum.cpp
+  ../MultiBody/MultiBodySoftContact.cpp
   ../MultiBody/TestJointTorqueSetup.cpp
   ../MultiBody/TestJointTorqueSetup.h
   ../MultiBody/InvertedPendulumPDControl.cpp
@@ -144,6 +289,7 @@ SET(App_ExampleBrowser_SRCS
  ../MultiBody/MultiBodyConstraintFeedback.cpp
   ../MultiBody/MultiDofDemo.cpp
   ../MultiBody/MultiDofDemo.h
+  ../RigidBody/RigidBodySoftContact.cpp
   ../Constraints/TestHingeTorque.cpp
   ../Constraints/TestHingeTorque.h
   ../Constraints/ConstraintDemo.cpp
@@ -156,6 +302,17 @@ SET(App_ExampleBrowser_SRCS
 
 	../ThirdPartyLibs/stb_image/stb_image.cpp
 	../ThirdPartyLibs/stb_image/stb_image.h
+	
+	../ThirdPartyLibs/BussIK/Jacobian.cpp
+	../ThirdPartyLibs/BussIK/Tree.cpp
+	../ThirdPartyLibs/BussIK/Node.cpp
+	../ThirdPartyLibs/BussIK/LinearR2.cpp
+	../ThirdPartyLibs/BussIK/LinearR3.cpp
+	../ThirdPartyLibs/BussIK/LinearR4.cpp
+	../ThirdPartyLibs/BussIK/MatrixRmn.cpp
+	../ThirdPartyLibs/BussIK/VectorRn.cpp
+	../ThirdPartyLibs/BussIK/Misc.cpp
+	
 
 	../ThirdPartyLibs/Wavefront/tiny_obj_loader.cpp
 	../ThirdPartyLibs/tinyxml/tinystr.cpp
@@ -163,69 +320,31 @@ SET(App_ExampleBrowser_SRCS
 	../ThirdPartyLibs/tinyxml/tinyxmlerror.cpp
 	../ThirdPartyLibs/tinyxml/tinyxmlparser.cpp
 
-
-	../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/pose.cpp
-		../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/model.cpp
-	../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/link.cpp
-	../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/joint.cpp
-	../ThirdPartyLibs/urdf/urdfdom/urdf_parser/include/urdf_parser/urdf_parser.h
-	../ThirdPartyLibs/urdf/urdfdom_headers/urdf_exception/include/urdf_exception/exception.h
-	../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h
-	../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/model.h
-	../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/link.h
-	../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/joint.h
 	../ThirdPartyLibs/tinyxml/tinystr.cpp
 	../ThirdPartyLibs/tinyxml/tinyxml.cpp
 	../ThirdPartyLibs/tinyxml/tinyxmlerror.cpp
 	../ThirdPartyLibs/tinyxml/tinyxmlparser.cpp
-	../ThirdPartyLibs/urdf/boost_replacement/lexical_cast.h
-	../ThirdPartyLibs/urdf/boost_replacement/shared_ptr.h
-	../ThirdPartyLibs/urdf/boost_replacement/printf_console.cpp
-	../ThirdPartyLibs/urdf/boost_replacement/printf_console.h
-	../ThirdPartyLibs/urdf/boost_replacement/string_split.cpp
-	../ThirdPartyLibs/urdf/boost_replacement/string_split.h
-	../Utils/b3Clock.cpp
-	../Utils/b3Clock.h
-	../Utils/b3ResourcePath.cpp
-	../Utils/b3ResourcePath.h
-	${ExampleBrowser_SRCS}
-	${ExampleBrowser_HDRS}
+	InProcessExampleBrowser.cpp
 	${BULLET_PHYSICS_SOURCE_DIR}/build3/bullet.rc
 )
-
-LINK_LIBRARIES(
-        Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils BulletInverseDynamics LinearMath OpenGLWindow gwen
-)
-
-IF (WIN32)
-	SET(App_ExampleBrowser_SRCS ${App_ExampleBrowser_SRCS} )
-	INCLUDE_DIRECTORIES(
-				${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew
-	)
-	LINK_LIBRARIES(
-		${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
-	)
-	ADD_DEFINITIONS(-DGLEW_STATIC)
-ELSE(WIN32)
-	IF(APPLE)
-                find_library(COCOA NAMES Cocoa)
-                MESSAGE(${COCOA})
-                link_libraries(${COCOA} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-  ELSE(APPLE)
-		ADD_DEFINITIONS("-DGLEW_INIT_OPENGL11_FUNCTIONS=1")
-		ADD_DEFINITIONS("-DGLEW_STATIC")
-		ADD_DEFINITIONS("-DGLEW_DYNAMIC_LOAD_ALL_GLX_FUNCTIONS=1")
-		INCLUDE_DIRECTORIES( ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/Glew )
-		LINK_LIBRARIES( pthread dl)
-	ENDIF(APPLE)
-ENDIF(WIN32)
-
 
 
 
 ADD_EXECUTABLE(App_ExampleBrowser
-		${App_ExampleBrowser_SRCS}
+		main.cpp
+		ExampleEntries.cpp
+		ExampleEntries.h
+		${ExtendedTutorialsSources}
+		${BulletExampleBrowser_SRCS} 
 )
+
+FILE( MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/data" )
+
+ADD_CUSTOM_COMMAND(
+                TARGET App_ExampleBrowser
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} ARGS -E copy_directory ${BULLET_PHYSICS_SOURCE_DIR}/data ${PROJECT_BINARY_DIR}/data
+        )
 
 
 IF (INTERNAL_ADD_POSTFIX_EXECUTABLE_NAMES)

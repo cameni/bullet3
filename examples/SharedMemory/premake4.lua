@@ -10,12 +10,13 @@ end
 includedirs {".","../../src", "../ThirdPartyLibs",}
 
 links {
-	"Bullet3Common",	"BulletDynamics","BulletCollision", "LinearMath"
+	"Bullet3Common","BulletInverseDynamicsUtils", "BulletInverseDynamics",	"BulletDynamics","BulletCollision", "LinearMath"
 }
 
 language "C++"
 
-files {
+myfiles = 
+{
 	"PhysicsClient.cpp",
 	"PhysicsClientSharedMemory.cpp",
 	"PhysicsClientExample.cpp",
@@ -24,11 +25,13 @@ files {
 	"PhysicsServerSharedMemory.h",
 	"PhysicsServer.cpp",
 	"PhysicsServer.h",
-	"main.cpp",
 	"PhysicsClientC_API.cpp",
+	"SharedMemoryCommands.h",
+	"SharedMemoryPublic.h",
 	"PhysicsServer.cpp",
 	"PosixSharedMemory.cpp",
 	"Win32SharedMemory.cpp",
+	"InProcessMemory.cpp",
 	"PhysicsDirect.cpp",
 	"PhysicsDirect.h",
 	"PhysicsDirectC_API.cpp",
@@ -39,6 +42,15 @@ files {
 	"PhysicsLoopBackC_API.h",
 	"PhysicsServerCommandProcessor.cpp",
 	"PhysicsServerCommandProcessor.h",
+	"TinyRendererVisualShapeConverter.cpp",
+	"TinyRendererVisualShapeConverter.h",
+	"../TinyRenderer/geometry.cpp",
+	"../TinyRenderer/model.cpp",
+	"../TinyRenderer/tgaimage.cpp",
+	"../TinyRenderer/our_gl.cpp",
+	"../TinyRenderer/TinyRenderer.cpp",
+	"../OpenGLWindow/SimpleCamera.cpp",
+	"../OpenGLWindow/SimpleCamera.h",
 	"../Importers/ImportURDFDemo/ConvertRigidBodies2MultiBody.h",
 	"../Importers/ImportURDFDemo/MultiBodyCreationInterface.h",
 	"../Importers/ImportURDFDemo/MyMultiBodyCreator.cpp",
@@ -46,8 +58,6 @@ files {
 	"../Importers/ImportURDFDemo/BulletUrdfImporter.cpp",
 	"../Importers/ImportURDFDemo/BulletUrdfImporter.h",
 	"../Importers/ImportURDFDemo/UrdfParser.cpp",
-	"../Importers/ImportURDFDemo/BulletUrdfImporter.cpp",
-	"../Importers/ImportURDFDemo/BulletUrdfImporter.h",
  	"../Importers/ImportURDFDemo/urdfStringSplit.cpp",
 	"../Importers/ImportURDFDemo/UrdfParser.cpp",
 	"../Importers/ImportURDFDemo/UrdfParser.h",
@@ -66,26 +76,211 @@ files {
 	"../Importers/ImportColladaDemo/LoadMeshFromCollada.cpp",
 	"../Importers/ImportColladaDemo/ColladaGraphicsInstance.h",
 	"../ThirdPartyLibs/Wavefront/tiny_obj_loader.cpp",	
-	  "../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/pose.cpp",
-                "../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/model.cpp",
-    "../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/link.cpp",
-    "../ThirdPartyLibs/urdf/urdfdom/urdf_parser/src/joint.cpp",
-    "../ThirdPartyLibs/urdf/urdfdom/urdf_parser/include/urdf_parser/urdf_parser.h",
-    "../ThirdPartyLibs/urdf/urdfdom_headers/urdf_exception/include/urdf_exception/exception.h",
-    "../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h",
-    "../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/model.h",
-    "../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/link.h",
-    "../ThirdPartyLibs/urdf/urdfdom_headers/urdf_model/include/urdf_model/joint.h",
-    "../ThirdPartyLibs/tinyxml/tinystr.cpp",
-    "../ThirdPartyLibs/tinyxml/tinyxml.cpp",
-    "../ThirdPartyLibs/tinyxml/tinyxmlerror.cpp",
-    "../ThirdPartyLibs/tinyxml/tinyxmlparser.cpp",
-    "../ThirdPartyLibs/urdf/boost_replacement/lexical_cast.h",
-    "../ThirdPartyLibs/urdf/boost_replacement/shared_ptr.h",
-    "../ThirdPartyLibs/urdf/boost_replacement/printf_console.cpp",
-    "../ThirdPartyLibs/urdf/boost_replacement/printf_console.h",
-    "../ThirdPartyLibs/urdf/boost_replacement/string_split.cpp",
-    "../ThirdPartyLibs/urdf/boost_replacement/string_split.h",
-
+	"../ThirdPartyLibs/tinyxml/tinystr.cpp",
+	"../ThirdPartyLibs/tinyxml/tinyxml.cpp",
+	"../ThirdPartyLibs/tinyxml/tinyxmlerror.cpp",
+	"../ThirdPartyLibs/tinyxml/tinyxmlparser.cpp",
+	"../Importers/ImportMeshUtility/b3ImportMeshUtility.cpp",
+	"../ThirdPartyLibs/stb_image/stb_image.cpp",     
 }
 
+files {
+	myfiles,
+	"main.cpp",
+}
+
+
+files {
+		"../MultiThreading/b3ThreadSupportInterface.cpp",
+		"../MultiThreading/b3ThreadSupportInterface.h"
+	}
+	if os.is("Windows") then
+
+		files {
+                "../MultiThreading/b3Win32ThreadSupport.cpp",  
+                "../MultiThreading/b3Win32ThreadSupport.h" 
+		}
+		--links {"winmm"}
+		--defines {"__WINDOWS_MM__", "WIN32"}
+	end
+
+	if os.is("Linux") then 
+		files {
+                "../MultiThreading/b3PosixThreadSupport.cpp",  
+                "../MultiThreading/b3PosixThreadSupport.h"    
+        	}
+
+		links {"pthread"}
+	end
+
+	if os.is("MacOSX") then
+		files {
+                "../MultiThreading/b3PosixThreadSupport.cpp",
+                "../MultiThreading/b3PosixThreadSupport.h"    
+                }
+
+		links {"pthread"}
+		--links{"CoreAudio.framework", "coreMIDI.framework", "Cocoa.framework"}
+		--defines {"__MACOSX_CORE__"}
+	end
+
+
+project "App_SharedMemoryPhysics_GUI"
+
+if _OPTIONS["ios"] then
+        kind "WindowedApp"
+else
+        kind "ConsoleApp"
+end
+defines {"B3_USE_STANDALONE_EXAMPLE"}
+
+includedirs {"../../src"}
+
+links {
+        "BulletInverseDynamicsUtils", "BulletInverseDynamics", "BulletDynamics","BulletCollision", "LinearMath", "OpenGL_Window","Bullet3Common"
+}
+	initOpenGL()
+  initGlew()
+
+language "C++"
+
+files {
+        myfiles,
+        "../StandaloneMain/main_opengl_single_example.cpp",
+				"../ExampleBrowser/OpenGLGuiHelper.cpp",
+				"../ExampleBrowser/GL_ShapeDrawer.cpp",
+				"../ExampleBrowser/CollisionShape2TriangleMesh.cpp",
+}
+
+if os.is("Linux") then initX11() end
+
+if os.is("MacOSX") then
+        links{"Cocoa.framework"}
+end
+
+
+files {
+		"../MultiThreading/b3ThreadSupportInterface.cpp",
+		"../MultiThreading/b3ThreadSupportInterface.h"
+	}
+if os.is("Windows") then
+
+	files {
+              "../MultiThreading/b3Win32ThreadSupport.cpp",  
+              "../MultiThreading/b3Win32ThreadSupport.h" 
+	}
+	--links {"winmm"}
+	--defines {"__WINDOWS_MM__", "WIN32"}
+end
+
+if os.is("Linux") then 
+	files {
+              "../MultiThreading/b3PosixThreadSupport.cpp",  
+              "../MultiThreading/b3PosixThreadSupport.h"    
+      	}
+
+	links {"pthread"}
+end
+
+if os.is("MacOSX") then
+	files {
+              "../MultiThreading/b3PosixThreadSupport.cpp",
+              "../MultiThreading/b3PosixThreadSupport.h"    
+              }
+
+	links {"pthread"}
+	--links{"CoreAudio.framework", "coreMIDI.framework", "Cocoa.framework"}
+	--defines {"__MACOSX_CORE__"}
+end
+
+if os.is("Windows") then 
+	project "App_SharedMemoryPhysics_VR"
+	--for now, only enable VR under Windows, until compilation issues are resolved on Mac/Linux
+	defines {"B3_USE_STANDALONE_EXAMPLE","BT_ENABLE_VR"}
+	
+	if _OPTIONS["ios"] then
+		kind "WindowedApp"
+	else	
+		kind "ConsoleApp"
+	end
+	
+	includedirs {
+			".","../../src", "../ThirdPartyLibs",
+			"../ThirdPartyLibs/openvr/headers",
+			"../ThirdPartyLibs/openvr/samples/shared"
+		}
+						
+	links {
+		"BulletInverseDynamicsUtils", "BulletInverseDynamics","Bullet3Common",	"BulletDynamics","BulletCollision", "LinearMath","OpenGL_Window","openvr_api"
+	}
+	
+	
+	language "C++"
+	
+	
+		initOpenGL()
+	  initGlew()
+	
+	
+	files
+	{
+		myfiles,
+		 "../StandaloneMain/hellovr_opengl_main.cpp",
+					"../ExampleBrowser/OpenGLGuiHelper.cpp",
+					"../ExampleBrowser/GL_ShapeDrawer.cpp",
+					"../ExampleBrowser/CollisionShape2TriangleMesh.cpp",
+					"../ThirdPartyLibs/openvr/samples/shared/lodepng.cpp",
+					"../ThirdPartyLibs/openvr/samples/shared/lodepng.h",
+					"../ThirdPartyLibs/openvr/samples/shared/Matrices.cpp",
+					"../ThirdPartyLibs/openvr/samples/shared/Matrices.h",
+					"../ThirdPartyLibs/openvr/samples/shared/pathtools.cpp",
+					"../ThirdPartyLibs/openvr/samples/shared/pathtools.h",
+					"../ThirdPartyLibs/openvr/samples/shared/Vectors.h",
+	}
+	if os.is("Windows") then 
+		libdirs {"../ThirdPartyLibs/openvr/lib/win32"}
+	end
+	
+	if os.is("Linux") then initX11() end
+	
+	if os.is("MacOSX") then
+	        links{"Cocoa.framework"}
+	end
+	
+	
+	files {
+			"../MultiThreading/b3ThreadSupportInterface.cpp",
+			"../MultiThreading/b3ThreadSupportInterface.h"
+		}
+		if os.is("Windows") then
+	
+			files {
+	                "../MultiThreading/b3Win32ThreadSupport.cpp",  
+	                "../MultiThreading/b3Win32ThreadSupport.h" 
+			}
+			--links {"winmm"}
+			--defines {"__WINDOWS_MM__", "WIN32"}
+		end
+	
+		if os.is("Linux") then 
+			files {
+	                "../MultiThreading/b3PosixThreadSupport.cpp",  
+	                "../MultiThreading/b3PosixThreadSupport.h"    
+	        	}
+	
+			links {"pthread"}
+		end
+	
+		if os.is("MacOSX") then
+			files {
+	                "../MultiThreading/b3PosixThreadSupport.cpp",
+	                "../MultiThreading/b3PosixThreadSupport.h"    
+	                }
+	
+			links {"pthread"}
+			--links{"CoreAudio.framework", "coreMIDI.framework", "Cocoa.framework"}
+			--defines {"__MACOSX_CORE__"}
+		end
+
+
+end

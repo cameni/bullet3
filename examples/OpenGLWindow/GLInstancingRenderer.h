@@ -56,13 +56,16 @@ public:
 	void InitShaders();
 	void CleanupShaders();
 	virtual void removeAllInstances();
-
+	
 	virtual void updateShape(int shapeIndex, const float* vertices);
 
 	///vertices must be in the format x,y,z, nx,ny,nz, u,v
 	virtual int registerShape(const float* vertices, int numvertices, const int* indices, int numIndices, int primitiveType=B3_GL_TRIANGLES, int textureIndex=-1);
 	
 	virtual int	registerTexture(const unsigned char* texels, int width, int height);
+	virtual void    updateTexture(int textureIndex, const unsigned char* texels);
+    virtual void activateTexture(int textureIndex);
+
 
 	///position x,y,z, quaternion x,y,z,w, color r,g,b,a, scaling x,y,z
 	virtual int registerGraphicsInstance(int shapeIndex, const float* position, const float* quaternion, const float* color, const float* scaling);
@@ -91,6 +94,9 @@ public:
 
 	virtual void writeSingleInstanceColorToCPU(float* color, int srcIndex);
 	virtual void writeSingleInstanceColorToCPU(double* color, int srcIndex);
+
+	virtual void writeSingleInstanceScaleToCPU(float* scale, int srcIndex);
+	virtual void writeSingleInstanceScaleToCPU(double* scale, int srcIndex);
 
 	
 	virtual struct	GLInstanceRendererInternalData* getInternalData();
@@ -122,6 +128,8 @@ public:
 	
 	virtual int getInstanceCapacity() const;
 	
+	virtual int getTotalNumInstances() const;
+	
 	virtual void enableShadowMap();
     virtual void enableBlend(bool blend)
     {
@@ -129,6 +137,7 @@ public:
     }
 	virtual void clearZBuffer();
 
+	virtual void setRenderFrameBuffer(unsigned int renderFrameBuffer);
 };
 
 #endif //GL_INSTANCING_RENDERER_H

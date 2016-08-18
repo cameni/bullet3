@@ -27,10 +27,13 @@
 #define SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE (256*1024)
 
 #define SHARED_MEMORY_SERVER_TEST_C
-#define MAX_DEGREE_OF_FREEDOM 64
+#define MAX_DEGREE_OF_FREEDOM 128
 #define MAX_NUM_SENSORS 256
 #define MAX_URDF_FILENAME_LENGTH 1024
+#define MAX_SDF_FILENAME_LENGTH 1024
 #define MAX_FILENAME_LENGTH MAX_URDF_FILENAME_LENGTH
+#define MAX_NUM_LINKS MAX_DEGREE_OF_FREEDOM
+#define MAX_SDF_BODIES 500
 
 struct TmpFloat3 
 {
@@ -52,6 +55,17 @@ TmpFloat3 CreateTmpFloat3(float x, float y, float z)
     tmp.m_z = z;
     return tmp;
 }
+
+enum EnumSdfArgsUpdateFlags
+{
+	SDF_ARGS_FILE_NAME=1,
+};
+
+struct SdfArgs
+{
+	char m_sdfFileName[MAX_URDF_FILENAME_LENGTH];
+    int m_useMultiBody;
+};
 
 enum EnumUrdfArgsUpdateFlags
 {
@@ -102,6 +116,7 @@ enum EnumInitPoseFlags
 struct InitPoseArgs
 {
 	int m_bodyUniqueId;
+	int m_hasInitialStateQ[MAX_DEGREE_OF_FREEDOM];
 	double m_initialStateQ[MAX_DEGREE_OF_FREEDOM];
 };
 
@@ -112,11 +127,40 @@ struct RequestDebugLinesArgs
     int m_startingLineIndex;
 };
 
+struct RequestPixelDataArgs
+{
+	float m_viewMatrix[16];
+	float m_projectionMatrix[16];
+	int m_startPixelIndex;
+	int m_pixelWidth;
+	int m_pixelHeight;
+};
+
+enum EnumRequestPixelDataUpdateFlags
+{
+	REQUEST_PIXEL_ARGS_HAS_CAMERA_MATRICES=1,
+	REQUEST_PIXEL_ARGS_SET_PIXEL_WIDTH_HEIGHT=4,
+	//don't exceed (1<<15), because this enum is shared with EnumRenderer in SharedMemoryPublic.h
+	
+};
+
+
+
 struct SendDebugLinesArgs
 {
     int m_startingLineIndex;
 	int m_numDebugLines;
     int m_numRemainingDebugLines;
+};
+
+struct SendPixelDataArgs
+{
+	int m_imageWidth;
+	int m_imageHeight;
+
+    int m_startingPixelIndex;
+    int m_numPixelsCopied;
+    int m_numRemainingPixels;
 };
 
 struct PickBodyArgs
@@ -137,11 +181,14 @@ struct SendDesiredStateArgs
 	double m_Kp[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
 	double m_Kd[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
 
+    int m_hasDesiredStateFlags[MAX_DEGREE_OF_FREEDOM];
+    
 	//desired state is only written by the client, read-only access by server is expected
 
 	//m_desiredStateQ is indexed by position variables, 
 	//starting with 3 base position variables, 4 base orientation variables (quaternion), then link position variables
     double m_desiredStateQ[MAX_DEGREE_OF_FREEDOM];
+    
 
 	//m_desiredStateQdot is index by velocity degrees of freedom, 3 linear and 3 angular variables for the base and then link velocity variables
     double m_desiredStateQdot[MAX_DEGREE_OF_FREEDOM];
@@ -150,7 +197,16 @@ struct SendDesiredStateArgs
 	//or the maximum applied force/torque for the PD/motor/constraint to reach the desired velocity in CONTROL_MODE_VELOCITY and CONTROL_MODE_POSITION_VELOCITY_PD mode
 	//indexed by degree of freedom, 6 dof base, and then dofs for each link
     double m_desiredStateForceTorque[MAX_DEGREE_OF_FREEDOM];
- 
+    
+};
+
+enum EnumSimDesiredStateUpdateFlags
+{
+	SIM_DESIRED_STATE_HAS_Q=1,
+	SIM_DESIRED_STATE_HAS_QDOT=2,
+	SIM_DESIRED_STATE_HAS_KD=4,
+	SIM_DESIRED_STATE_HAS_KP=8,
+	SIM_DESIRED_STATE_HAS_MAX_FORCE=16,
 };
 
 
@@ -160,6 +216,7 @@ enum EnumSimParamUpdateFlags
 	SIM_PARAM_UPDATE_GRAVITY=2,
 	SIM_PARAM_UPDATE_NUM_SOLVER_ITERATIONS=4,	
 	SIM_PARAM_UPDATE_NUM_SIMULATION_SUB_STEPS=8,
+	SIM_PARAM_UPDATE_REAL_TIME_SIMULATION = 16,
 };
 
 ///Controlling a robot involves sending the desired state to its joint motor controllers.
@@ -170,6 +227,7 @@ struct SendPhysicsSimulationParameters
 	double m_gravityAcceleration[3];
 	int m_numSimulationSubSteps;
 	int m_numSolverIterations;
+	bool m_allowRealTimeSimulation;
 };
 
 struct RequestActualStateArgs
@@ -194,7 +252,11 @@ struct SendActualStateArgs
 
     //measured 6DOF force/torque sensors: force[x,y,z] and torque[x,y,z]
     double m_jointReactionForces[6*MAX_DEGREE_OF_FREEDOM];
-  
+
+    double m_jointMotorForce[MAX_DEGREE_OF_FREEDOM];
+    
+    double m_linkState[7*MAX_NUM_LINKS];
+    double m_linkLocalInertialFrames[7*MAX_NUM_LINKS];
 };
 
 enum EnumSensorTypes
@@ -244,6 +306,66 @@ struct CreateBoxShapeArgs
 	double m_colorRGBA[4];
 };
 
+struct SdfLoadedArgs
+{
+    int m_numBodies;
+    int m_bodyUniqueIds[MAX_SDF_BODIES];
+    
+    ///@todo(erwincoumans) load cameras, lights etc
+    //int m_numCameras; 
+    //int m_numLights; 
+};
+
+
+struct SdfRequestInfoArgs
+{
+    int m_bodyUniqueId;
+};
+
+///flags for b3ApplyExternalTorque and b3ApplyExternalForce
+enum EnumExternalForcePrivateFlags
+{
+//    EF_LINK_FRAME=1,
+//    EF_WORLD_FRAME=2,
+    EF_TORQUE=4,
+    EF_FORCE=8,
+};
+
+
+
+struct ExternalForceArgs
+{
+    int m_numForcesAndTorques;
+    int m_bodyUniqueIds[MAX_SDF_BODIES];
+    int m_linkIds[MAX_SDF_BODIES];
+    double m_forcesAndTorques[3*MAX_SDF_BODIES];
+    double m_positions[3*MAX_SDF_BODIES];
+    int m_forceFlags[MAX_SDF_BODIES];
+};
+
+enum EnumSdfRequestInfoFlags
+{
+    SDF_REQUEST_INFO_BODY=1,
+    //SDF_REQUEST_INFO_CAMERA=2,
+};
+
+
+struct CalculateInverseDynamicsArgs
+{
+	int m_bodyUniqueId;
+
+	double m_jointPositionsQ[MAX_DEGREE_OF_FREEDOM];
+	double m_jointVelocitiesQdot[MAX_DEGREE_OF_FREEDOM];
+	double m_jointAccelerations[MAX_DEGREE_OF_FREEDOM];
+};
+
+struct CalculateInverseDynamicsResultArgs
+{
+	int m_bodyUniqueId;
+	int m_dofCount;
+	double m_jointForces[MAX_DEGREE_OF_FREEDOM];
+};
+
 struct SharedMemoryCommand
 {
 	int m_type;
@@ -257,6 +379,8 @@ struct SharedMemoryCommand
     union
     {
         struct UrdfArgs m_urdfArguments;
+		struct SdfArgs m_sdfArguments;
+		struct SdfRequestInfoArgs m_sdfRequestInfoArgs;
 		struct InitPoseArgs m_initPoseArgs;
 		struct SendPhysicsSimulationParameters m_physSimParamArgs;
 		struct BulletDataStreamArgs	m_dataStreamArguments;
@@ -265,7 +389,10 @@ struct SharedMemoryCommand
         struct CreateSensorArgs m_createSensorArguments;
         struct CreateBoxShapeArgs m_createBoxShapeArguments;
 		struct RequestDebugLinesArgs m_requestDebugLinesArguments;
+		struct RequestPixelDataArgs m_requestPixelDataArguments;
 		struct PickBodyArgs m_pickBodyArguments;
+        struct ExternalForceArgs m_externalForceArguments;
+		struct CalculateInverseDynamicsArgs m_calculateInverseDynamicsArguments;
     };
 };
 
@@ -284,9 +411,12 @@ struct SharedMemoryStatus
 	union
 	{
 		struct BulletDataStreamArgs	m_dataStreamArguments;
+		struct SdfLoadedArgs m_sdfLoadedArgs;
 		struct SendActualStateArgs m_sendActualStateArgs;
 		struct SendDebugLinesArgs m_sendDebugLinesArgs;
+		struct SendPixelDataArgs m_sendPixelDataArguments;
 		struct RigidBodyCreateArgs m_rigidBodyCreateArgs;
+		struct CalculateInverseDynamicsResultArgs m_inverseDynamicsResultArgs;
 	};
 };
 
