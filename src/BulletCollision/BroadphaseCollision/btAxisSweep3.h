@@ -168,6 +168,10 @@ public:
 		return m_pairCache;
 	}
 
+    const btDbvtBroadphase*     getRaycastAccelerator() const {
+        return m_raycastAccelerator;
+    }
+
 	void	setOverlappingPairUserCallback(btOverlappingPairCallback* pairCallback)
 	{
 		m_userPairCallback = pairCallback;
