@@ -187,17 +187,15 @@ public:
     }
 
     ///Register interface creators in the global registry
-    static void* register_interfaces()
+    static void register_interfaces( bool on )
     {
         interface_register::register_interface_creator(
-            "bt::physics@wrapper", (void*)&_generic_interface_creator);
+            "bt::physics@wrapper", on ? (void*)&_generic_interface_creator : nullptr);
 
         interface_register::register_interface_creator(
-            "bt::physics.create@3665953306", (void*)&create);
+            "bt::physics.create@3665953306", on ? (void*)&create : nullptr);
         interface_register::register_interface_creator(
-            "bt::physics.get@3665953306", (void*)&get);
-
-        return (void*)&register_interfaces;
+            "bt::physics.get@3665953306", on ? (void*)&get : nullptr);
     }
 };
 
@@ -208,10 +206,11 @@ intergen_interface::ifn_t* physics_dispatcher::_vtable1 = 0;
 
 
 //auto-register the available interface creators
-static void* physics_autoregger = physics_dispatcher::register_interfaces();
+LOCAL_SINGLETON_DEF(ifc_autoregger) physics_autoregger = new ifc_autoregger(&physics_dispatcher::register_interfaces);
 
 void* force_register_physics() {
-    return physics_dispatcher::register_interfaces();
+    LOCAL_SINGLETON_DEF(ifc_autoregger) autoregger = new ifc_autoregger(&physics_dispatcher::register_interfaces);
+    return autoregger.get();
 }
 
 } //namespace bt

@@ -161,8 +161,8 @@ public:
 
     int intergen_hash_id() const override { return HASHID; }
 
-    const coid::token& intergen_interface_name() const override {
-        static const coid::token _name = "bt::physics";
+    const coid::tokenhash& intergen_interface_name() const override {
+        static const coid::tokenhash _name = "bt::physics";
         return _name;
     }
 
