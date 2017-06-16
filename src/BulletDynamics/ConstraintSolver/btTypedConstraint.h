@@ -99,8 +99,8 @@ ATTRIBUTE_ALIGNED16(class) btTypedConstraint : public btTypedObject
 	}
 
 protected:
-	btRigidBody&	m_rbA;
-	btRigidBody&	m_rbB;
+	btRigidBody*	m_rbA;
+	btRigidBody*	m_rbB;
 	btScalar	m_appliedImpulse;
 	btScalar	m_dbgDrawSize;
 	btJointFeedback*	m_jointFeedback;
@@ -221,21 +221,25 @@ public:
 	
 	const btRigidBody& getRigidBodyA() const
 	{
-		return m_rbA;
+		return *m_rbA;
 	}
 	const btRigidBody& getRigidBodyB() const
 	{
-		return m_rbB;
+		return *m_rbB;
 	}
 
 	btRigidBody& getRigidBodyA() 
 	{
-		return m_rbA;
+		return *m_rbA;
 	}
 	btRigidBody& getRigidBodyB()
 	{
-		return m_rbB;
+		return *m_rbB;
 	}
+
+    void setRigidBodyB(btRigidBody* rbB) {
+        m_rbB = rbB;
+    }
 
 	int getUserConstraintType() const
 	{

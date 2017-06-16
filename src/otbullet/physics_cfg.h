@@ -91,7 +91,6 @@ struct tree_collision_info
 {
     btCollisionObject obj;
     btCapsuleShape shape;
-    const tree * tree_inf;
 };
 
 //

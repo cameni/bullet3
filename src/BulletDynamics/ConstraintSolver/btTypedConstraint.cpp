@@ -29,8 +29,8 @@ m_breakingImpulseThreshold(SIMD_INFINITY),
 m_isEnabled(true),
 m_needsFeedback(false),
 m_overrideNumSolverIterations(-1),
-m_rbA(rbA),
-m_rbB(getFixedBody()),
+m_rbA(&rbA),
+m_rbB(&getFixedBody()),
 m_appliedImpulse(btScalar(0.)),
 m_dbgDrawSize(DEFAULT_DEBUGDRAW_SIZE),
 m_jointFeedback(0)
@@ -46,8 +46,8 @@ m_breakingImpulseThreshold(SIMD_INFINITY),
 m_isEnabled(true),
 m_needsFeedback(false),
 m_overrideNumSolverIterations(-1),
-m_rbA(rbA),
-m_rbB(rbB),
+m_rbA(&rbA),
+m_rbB(&rbB),
 m_appliedImpulse(btScalar(0.)),
 m_dbgDrawSize(DEFAULT_DEBUGDRAW_SIZE),
 m_jointFeedback(0)
@@ -111,8 +111,8 @@ const char*	btTypedConstraint::serialize(void* dataBuffer, btSerializer* seriali
 {
 	btTypedConstraintData2* tcd = (btTypedConstraintData2*) dataBuffer;
 
-	tcd->m_rbA = (btRigidBodyData*)serializer->getUniquePointer(&m_rbA);
-	tcd->m_rbB = (btRigidBodyData*)serializer->getUniquePointer(&m_rbB);
+	tcd->m_rbA = (btRigidBodyData*)serializer->getUniquePointer(m_rbA);
+	tcd->m_rbB = (btRigidBodyData*)serializer->getUniquePointer(m_rbB);
 	char* name = (char*) serializer->findNameForPointer(this);
 	tcd->m_name = (char*)serializer->getUniquePointer(name);
 	if (tcd->m_name)
@@ -135,11 +135,11 @@ const char*	btTypedConstraint::serialize(void* dataBuffer, btSerializer* seriali
 	tcd->m_disableCollisionsBetweenLinkedBodies = false;
 
 	int i;
-	for (i=0;i<m_rbA.getNumConstraintRefs();i++)
-		if (m_rbA.getConstraintRef(i) == this)
+	for (i=0;i<m_rbA->getNumConstraintRefs();i++)
+		if (m_rbA->getConstraintRef(i) == this)
 			tcd->m_disableCollisionsBetweenLinkedBodies = true;
-	for (i=0;i<m_rbB.getNumConstraintRefs();i++)
-		if (m_rbB.getConstraintRef(i) == this)
+	for (i=0;i<m_rbB->getNumConstraintRefs();i++)
+		if (m_rbB->getConstraintRef(i) == this)
 			tcd->m_disableCollisionsBetweenLinkedBodies = true;
 
 	return btTypedConstraintDataName;
