@@ -193,7 +193,8 @@ public:
         float lod_dimension,
         coid::dynarray<bt::triangle>& data,
         coid::dynarray<uint>& trees,
-        coid::slotalloc<bt::tree_batch>& tree_batches );
+        coid::slotalloc<bt::tree_batch>& tree_batches,
+        uint frame );
 
     typedef bool(*fn_ext_collision_2)(
         const void* context,
@@ -202,7 +203,8 @@ public:
         float lod_dimension,
         coid::dynarray<bt::triangle>& data,
         coid::dynarray<uint>& trees,
-        coid::slotalloc<bt::tree_batch>& tree_batches );
+        coid::slotalloc<bt::tree_batch>& tree_batches,
+        uint frame );
 
     typedef float3(*fn_process_tree_collision)(btRigidBody * obj, bt::tree_collision_contex & ctx, float time_step, coid::slotalloc<bt::tree_batch>& tree_batches );
 
