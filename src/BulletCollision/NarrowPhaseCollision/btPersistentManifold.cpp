@@ -17,7 +17,6 @@ subject to the following restrictions:
 #include "btPersistentManifold.h"
 #include "LinearMath/btTransform.h"
 
-
 btScalar					gContactBreakingThreshold = btScalar(0.02);
 ContactDestroyedCallback	gContactDestroyedCallback = 0;
 ContactProcessedCallback	gContactProcessedCallback = 0;
@@ -243,7 +242,6 @@ btScalar	btPersistentManifold::getContactBreakingThreshold() const
 }
 
 
-
 void btPersistentManifold::refreshContactPoints(const btTransform& trA,const btTransform& trB)
 {
 	int i;
@@ -262,7 +260,7 @@ void btPersistentManifold::refreshContactPoints(const btTransform& trA,const btT
 		btManifoldPoint &manifoldPoint = m_pointCache[i];
 		manifoldPoint.m_positionWorldOnA = trA( manifoldPoint.m_localPointA );
 		manifoldPoint.m_positionWorldOnB = trB( manifoldPoint.m_localPointB );
-		manifoldPoint.m_distance1 = (manifoldPoint.m_positionWorldOnA -  manifoldPoint.m_positionWorldOnB).dot(manifoldPoint.m_normalWorldOnB);
+		manifoldPoint.m_distance1 = (manifoldPoint.m_positionWorldOnA -  manifoldPoint.m_positionWorldOnB).dot(manifoldPoint.m_separationNormal);
 		manifoldPoint.m_lifeTime++;
 	}
 
@@ -280,7 +278,7 @@ void btPersistentManifold::refreshContactPoints(const btTransform& trA,const btT
 		} else
 		{
 			//contact also becomes invalid when relative movement orthogonal to normal exceeds margin
-			projectedPoint = manifoldPoint.m_positionWorldOnA - manifoldPoint.m_normalWorldOnB * manifoldPoint.m_distance1;
+			projectedPoint = manifoldPoint.m_positionWorldOnA - manifoldPoint.m_separationNormal * manifoldPoint.m_distance1;
 			projectedDifference = manifoldPoint.m_positionWorldOnB - projectedPoint;
 			distance2d = projectedDifference.dot(projectedDifference);
 			if (distance2d  > getContactBreakingThreshold()*getContactBreakingThreshold() )

@@ -64,10 +64,12 @@ class btManifoldPoint
 
 			btManifoldPoint( const btVector3 &pointA, const btVector3 &pointB, 
 					const btVector3 &normal, 
+                    const btVector3 &separationNormal, 
 					btScalar distance ) :
 					m_localPointA( pointA ), 
 					m_localPointB( pointB ), 
 					m_normalWorldOnB( normal ), 
+                    m_separationNormal(separationNormal),
 					m_distance1( distance ),
 					m_combinedFriction(btScalar(0.)),
 					m_combinedRollingFriction(btScalar(0.)),
@@ -95,7 +97,8 @@ class btManifoldPoint
 			///m_positionWorldOnA is redundant information, see getPositionWorldOnA(), but for clarity
 			btVector3	m_positionWorldOnA;
 			btVector3 m_normalWorldOnB;
-		
+            btVector3 m_separationNormal;
+
 			btScalar	m_distance1;
 			btScalar	m_combinedFriction;
 			btScalar	m_combinedRollingFriction;

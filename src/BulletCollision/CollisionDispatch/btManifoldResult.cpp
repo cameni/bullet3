@@ -73,6 +73,15 @@ btManifoldResult::btManifoldResult(const btCollisionObjectWrapper* body0Wrap,con
 {
 }
 
+struct cp_debug {
+    btVector3 _p;
+    btVector3 _n;
+    cp_debug(const btVector3& p,const btVector3& n)
+        : _n(n)
+        , _p(p)
+    {}
+    cp_debug() {};
+};
 
 void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,btScalar depth)
 {
@@ -100,7 +109,7 @@ void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const b
 		localB = m_body1Wrap->getCollisionObject()->getWorldTransform().invXform(pointInWorld);
 	}
 
-	btManifoldPoint newPt(localA,localB,normalOnBInWorld,depth);
+	btManifoldPoint newPt(localA,localB,normalOnBInWorld, normalOnBInWorld,depth);
 	newPt.m_positionWorldOnA = pointA;
 	newPt.m_positionWorldOnB = pointInWorld;
 	
@@ -149,6 +158,5 @@ void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const b
 		const btCollisionObjectWrapper* obj1Wrap = isSwapped? m_body0Wrap : m_body1Wrap;
 		(*gContactAddedCallback)(m_manifoldPtr->getContactPoint(insertIndex),obj0Wrap,newPt.m_partId0,newPt.m_index0,obj1Wrap,newPt.m_partId1,newPt.m_index1);
 	}
-
 }
 
