@@ -240,6 +240,11 @@ public:
         return _stats;
     }
 
+    const void * get_context() { return _context; }
+
+    void get_obb(const btCollisionShape * cs, const btTransform& t, double3& cen, float3x3& basis);
+
+
 protected:
 
 	virtual void internalSingleStepSimulation(btScalar timeStep) override;
@@ -253,7 +258,6 @@ protected:
     fn_process_tree_collision _tree_collision;
 
     void process_tree_collisions(btScalar time_step);
-    void get_obb(const btCollisionShape * cs, const btTransform& t, double3& cen, float3x3& basis);
     void oob_to_aabb(const btVector3& src_cen,
         const btMatrix3x3& src_basis,
         const btVector3& dst_cen,
