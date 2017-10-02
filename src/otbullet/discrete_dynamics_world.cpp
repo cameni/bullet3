@@ -313,18 +313,17 @@ namespace ot {
 
                 get_obb(internal_obj_wrapper.getCollisionShape(), internal_obj_wrapper.getWorldTransform(), _from, _basis);
 
-                //if(!_sphere_intersect(_context, _from , _rad , _lod_dim, _triangles, _trees)) {
-                _relocation_offset = _tb_cache.get_array().ptr();
+                //_relocation_offset = _tb_cache.get_array().ptr();
                 if (!_aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, frame_count)) {
                     DASSERT(_tree_batches.size() == 0);
                     continue;
                 }
-                
+/*                
                 if (_relocation_offset != _tb_cache.get_array().ptr()) {
                     coidlog_warning("discrete_dynamics_world", "Tree baches slot allocator rebased. Tree batches count: " << _tb_cache.count());
                     repair_tree_batches();
                     repair_tree_collision_pairs();
-                }
+                }*/
 
 				if (_triangles.size() > 0) {
 
@@ -532,7 +531,7 @@ namespace ot {
         aabb_half[1] = dst_basis[1].dot(src_basis[0]) + dst_basis[0].dot(src_basis[1]) + dst_basis[0].dot(src_basis[2]);
         aabb_half[2] = dst_basis[2].dot(src_basis[0]) + dst_basis[0].dot(src_basis[1]) + dst_basis[0].dot(src_basis[2]);
     }
-
+/*
     void discrete_dynamics_world::repair_tree_collision_pairs()
     {
         _tree_collision_pairs.for_each([&](tree_collision_pair& tcp) {
@@ -555,7 +554,7 @@ namespace ot {
                 }
             }
         });
-    }
+    }*/
 
     bt::tree_collision_info * discrete_dynamics_world::get_tree_collision_info(const tree_collision_pair& tcp)
     {
@@ -764,7 +763,7 @@ namespace ot {
         , _debug_terrain_triangles(1024)
         , _debug_trees(1024)
         , _tb_cache(1024)
-        , _relocation_offset(0)
+        //, _relocation_offset(0)
 	{
 		btTriangleShape * ts = new btTriangleShape();
 		ts->setMargin(0.0f);

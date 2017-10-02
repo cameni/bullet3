@@ -150,7 +150,7 @@ protected:
     ///Cleanup routine called from ~physics()
     static void _cleaner_callback( physics* m, intergen_interface* ifc ) {
          ::physics* host = m->host<::physics>();
-        if (host) host->_ifc_host = ifc;
+        if (host) host->_ifc_host.assign_safe(ifc);
     }
 
     static iref<physics> _generic_interface_creator( ::physics* host, physics* __here__)
@@ -164,7 +164,7 @@ protected:
         __disp__->_vtable = _capture ? get_vtable_intercept() : get_vtable();
         if (!host->_ifc_host) {
             __disp__->_cleaner = &_cleaner_callback;
-            host->_ifc_host = __disp__;
+            host->_ifc_host.assign_safe(__disp__);
         }
 
         return __disp__;
