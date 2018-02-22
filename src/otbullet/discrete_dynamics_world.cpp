@@ -246,8 +246,10 @@ namespace ot {
             uint tri_count = 0;
 
 			for (uints j = 0; j < _cow_internal.size(); j++) {
-
-				btCollisionObjectWrapper internal_obj_wrapper(_cow_internal[j]._parent,
+                if (_cow_internal[j]._shape->getUserIndex() & 1) { // do not collide with terrain
+                    continue;
+                }
+ 				btCollisionObjectWrapper internal_obj_wrapper(_cow_internal[j]._parent,
 					_cow_internal[j]._shape,
 					obj,
 					_cow_internal[j]._worldTransform,
@@ -317,9 +319,13 @@ namespace ot {
                 //_relocation_offset = _tb_cache.get_array().ptr();
                 
                 bool is_above_tm = false;
+                double3 under_terrain_contact;
+                float3 under_terrain_normal;
 
-                if (!_aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, frame_count,is_above_tm)) {
-                    DASSERT(_tree_batches.size() == 0);
+                int col_result = _aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, frame_count, is_above_tm, under_terrain_contact, under_terrain_normal);
+
+                if (col_result == 0) {
+                    //DASSERT(_tree_batches.size() == 0);
                     continue;
                 }
 /*                
@@ -357,7 +363,13 @@ namespace ot {
                     _stats.triangle_processing_time_ms += timer.time_ns() * 0.000001f;
 #endif // _PROFILING_ENABLED
 
-				}
+                }
+                else if (col_result == -1) {
+                    gContactAddedCallback = nullptr;
+                    res.addContactPoint(btVector3(under_terrain_normal.x, under_terrain_normal.y, under_terrain_normal.z),
+                        btVector3(_from.x, _from.y, _from.z),
+                        -glm::length(_from - under_terrain_contact));
+                }
 
                 if (_tree_batches.size() > 0) {
                     prepare_tree_collision_pairs(obj, _tree_batches, frame_count);
@@ -369,7 +381,7 @@ namespace ot {
             
             res.refreshContactPoints();
 
-            if (manifold->getNumContacts() == 0 || tri_count == 0) {
+            if (manifold->getNumContacts() == 0 /*|| (tri_count == 0)*/) {
                 getDispatcher()->releaseManifold(manifold);
                 _manifolds.get_item(rb->getTerrainManifoldHandle());
                 _manifolds.del(_manifolds.get_item(rb->getTerrainManifoldHandle()));
