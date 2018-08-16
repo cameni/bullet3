@@ -149,6 +149,7 @@ btCollisionAlgorithm* btCollisionDispatcher::findAlgorithm(const btCollisionObje
 
 	ci.m_dispatcher1 = this;
 	ci.m_manifold = sharedManifold;
+
 	btCollisionAlgorithm* algo = m_doubleDispatch[body0Wrap->getCollisionShape()->getShapeType()][body1Wrap->getCollisionShape()->getShapeType()]->CreateCollisionAlgorithm(ci,body0Wrap,body1Wrap);
 
 	return algo;

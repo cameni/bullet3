@@ -17,6 +17,7 @@
 
 #include "otbullet.hpp"
 #include "physics_cfg.h"
+#include "tm_broadphase.h"
 
 #include <comm/ref_i.h>
 #include <comm/commexception.h>
@@ -99,9 +100,10 @@ static int _ext_collider_obb(
     uint frame,
     bool& is_above_tm,
     double3& under_contact,
-    float3& under_normal)
+    float3& under_normal,
+    coid::dynarray<bt::terrain_mesh_broadphase*>& broadphases)
 {
-    return _physics->terrain_collisions_aabb(planet, center, basis, lod_dimension, data, trees, tree_batches, frame,is_above_tm, under_contact, under_normal);
+    return _physics->terrain_collisions_aabb(planet, center, basis, lod_dimension, data, trees, tree_batches, frame,is_above_tm, under_contact, under_normal, broadphases);
 }
 
 static float _ext_terrain_ray_intersect(
@@ -170,7 +172,7 @@ iref<physics> physics::create(double r, void* context)
     btVector3 worldMin(-r,-r,-r);
     btVector3 worldMax(r,r,r);
 
-    _overlappingPairCache = new bt32BitAxisSweep3(worldMin, worldMax);
+    _overlappingPairCache = new bt32BitAxisSweep3(worldMin, worldMax,10000);
     _constraintSolver = new btSequentialImpulseConstraintSolver();
 
     ot::discrete_dynamics_world * wrld = new ot::discrete_dynamics_world(
@@ -214,6 +216,33 @@ void physics::debug_draw_world() {
     if (_dbg_drawer) {
         _world->debugDrawWorld();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bt::terrain_mesh_broadphase* physics::create_broadphase(const double3& min, const double3& max)
+{
+    return new bt::terrain_mesh_broadphase(min,max);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void physics::add_collision_object_to_tm_broadphase(bt::terrain_mesh_broadphase * bp, btCollisionObject * co, unsigned int group, unsigned int mask)
+{
+    btTransform trans = co->getWorldTransform();
+
+    btVector3	minAabb;
+    btVector3	maxAabb;
+    co->getCollisionShape()->getAabb(trans, minAabb, maxAabb);
+
+    int type = co->getCollisionShape()->getShapeType();
+    co->setBroadphaseHandle(bp->_broadphase.createProxy(
+        minAabb,
+        maxAabb,
+        type,
+        co,
+        group,
+        mask,
+        0, 0
+    ));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

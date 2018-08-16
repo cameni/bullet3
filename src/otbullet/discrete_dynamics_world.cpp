@@ -14,8 +14,10 @@
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
 #include <LinearMath/btIDebugDraw.h>
+#include <LinearMath/btAabbUtil2.h>
 
 #include "ot_terrain_contact_common.h"
+#include "tm_broadphase.h"
 
 #include <comm/timer.h>
 #include <comm/log/logger.h>
@@ -145,6 +147,72 @@ namespace ot {
 
 	}
 
+    void discrete_dynamics_world::process_terrain_broadphases(const coid::dynarray<bt::terrain_mesh_broadphase*>& broadphase, btCollisionObject * col_obj)
+    {
+        btVector3 min, max;
+        col_obj->getCollisionShape()->getAabb(col_obj->getWorldTransform() ,min,max);
+
+        //add_debug_aabb(min, max,btVector3(1,1,1));
+
+        const btVector3 half = (max - min) * 0.5;
+        const btVector3 cen = (max + min) * 0.5;
+
+
+        broadphase.for_each([&](bt::terrain_mesh_broadphase* bp) {
+            query_volume_aabb(&bp->_broadphase,
+                double3(cen[0],cen[1],cen[2]),
+                double3(half[0], half[1], half[2]),
+                [&](btCollisionObject * co) {
+                add_terrain_broadphase_collision_pair(co, col_obj);
+            });
+        });
+    }
+
+    void discrete_dynamics_world::add_terrain_broadphase_collision_pair(btCollisionObject * obj1, btCollisionObject * obj2)
+    {        
+        btBroadphasePair * pair = _terrain_mesh_broadphase_pairs.find_if([&](const btBroadphasePair& bp) {
+            if (bp.m_pProxy0->m_clientObject == obj1 && bp.m_pProxy1->m_clientObject == obj2) {
+                return true;
+            }
+
+            return false;
+        });
+
+        if (!pair) {
+            pair = _terrain_mesh_broadphase_pairs.add();
+            new(pair)btBroadphasePair();
+            pair->m_pProxy0 = obj1->getBroadphaseHandle();
+            pair->m_pProxy1 = obj2->getBroadphaseHandle();
+        }
+    }
+
+    void discrete_dynamics_world::process_terrain_broadphase_collision_pairs()
+    {
+        btDispatcherInfo& dispatchInfo = getDispatchInfo();
+        btCollisionDispatcher* dispatcher = static_cast<btCollisionDispatcher*>(getDispatcher());
+
+        _terrain_mesh_broadphase_pairs.for_each([&](btBroadphasePair& bp) {
+            btCollisionObject * obj0 = reinterpret_cast<btCollisionObject *>(bp.m_pProxy0->m_clientObject);
+            btCollisionObject * obj1 = reinterpret_cast<btCollisionObject *>(bp.m_pProxy1->m_clientObject);
+
+            btVector3 min0, max0, min1, max1;
+            obj0->getCollisionShape()->getAabb(obj0->getWorldTransform(), min0, max0);
+            obj1->getCollisionShape()->getAabb(obj1->getWorldTransform(), min1, max1);
+
+            if (TestAabbAgainstAabb2(min0,max0,min1,max1)) {
+                (*dispatcher->getNearCallback())(bp, *dispatcher, m_dispatchInfo);
+            }
+            else {
+                _terrain_mesh_broadphase_pairs.del(&bp);
+
+                //a dalsie
+            }
+        });
+
+        
+
+    }
+
     void discrete_dynamics_world::removeRigidBody(btRigidBody * body)
     {
         const uint32 m_id = body->getTerrainManifoldHandle();
@@ -170,6 +238,7 @@ namespace ot {
         
         if (m_debugDrawer) {
             _debug_terrain_triangles.clear();
+            _debug_lines.clear();
             //_debug_terrain_trees.reset();
             //_debug_terrain_trees_active.reset();
             _debug_trees.reset();
@@ -188,7 +257,11 @@ namespace ot {
                 rb = reinterpret_cast<btRigidBody *>(obj);
             }
 
+        /*    btVector3 dbg_min, dbg_max;
+            rb->getCollisionShape()->getAabb(rb->getWorldTransform(), dbg_min, dbg_max);
+            add_debug_aabb(dbg_min, dbg_max, btVector3(1, 1, 1));
 
+*/
 			if (!rb || (obj->getCollisionShape()->getShapeType() != SPHERE_SHAPE_PROXYTYPE &&
 					obj->getCollisionShape()->getShapeType() != CAPSULE_SHAPE_PROXYTYPE &&
 					!obj->getCollisionShape()->isConvex() &&
@@ -244,6 +317,8 @@ namespace ot {
             res.setPersistentManifold(manifold);
 
             uint tri_count = 0;
+
+            coid::dynarray<bt::terrain_mesh_broadphase*> broadphases;
 
 			for (uints j = 0; j < _cow_internal.size(); j++) {
                 if (_cow_internal[j]._shape->getUserIndex() & 1) { // do not collide with terrain
@@ -322,7 +397,7 @@ namespace ot {
                 double3 under_terrain_contact;
                 float3 under_terrain_normal;
 
-                int col_result = _aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, frame_count, is_above_tm, under_terrain_contact, under_terrain_normal);
+                int col_result = _aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, frame_count, is_above_tm, under_terrain_contact, under_terrain_normal, broadphases);
 
                 if (col_result == 0) {
                     //DASSERT(_tree_batches.size() == 0);
@@ -381,13 +456,19 @@ namespace ot {
             
             res.refreshContactPoints();
 
-            if (manifold->getNumContacts() == 0 /*|| (tri_count == 0)*/) {
+            if (manifold->getNumContacts() == 0 || (tri_count == 0 && manifold->getNumContacts() > 0)) {
                 getDispatcher()->releaseManifold(manifold);
                 _manifolds.get_item(rb->getTerrainManifoldHandle());
                 _manifolds.del(_manifolds.get_item(rb->getTerrainManifoldHandle()));
                 rb->setTerrainManifoldHandle(UMAX32);
             }
+
+            //// tu budem pisat
+
+            process_terrain_broadphases(broadphases, obj);
 		}
+
+        process_terrain_broadphase_collision_pairs();
 
         ++frame_count;
         gContactAddedCallback = nullptr;
@@ -658,6 +739,10 @@ namespace ot {
 
                 m_debugDrawer->drawLine(bt_p1, bt_p2, cl_white);
         });
+
+        for (int i = 0; i < _debug_lines.size(); i += 3) {
+            m_debugDrawer->drawLine(_debug_lines[i], _debug_lines[i+1], _debug_lines[i + 2]);
+        }
     }
 
     discrete_dynamics_world::discrete_dynamics_world(btDispatcher * dispatcher,
@@ -678,6 +763,7 @@ namespace ot {
         , _debug_terrain_triangles(1024)
         , _debug_trees(1024)
         , _tb_cache(1024)
+        , _terrain_mesh_broadphase_pairs(1024)
         //, _relocation_offset(0)
 	{
 		btTriangleShape * ts = new btTriangleShape();
@@ -692,5 +778,56 @@ namespace ot {
 		_compound_processing_stack.reserve(128, false);
 	}
 
+    void discrete_dynamics_world::add_debug_aabb(const btVector3 & min, const btVector3 & max, const btVector3& color)
+    {
+        btVector3 v0 = btVector3(min[0], min[1], min[2]);
+        btVector3 v1 = btVector3(max[0], min[1], min[2]);
+        btVector3 v2 = btVector3(max[0], max[1], min[2]);
+        btVector3 v3 = btVector3(min[0], max[1], min[2]);
+
+        btVector3 v4 = btVector3(min[0], min[1], max[2]);
+        btVector3 v5 = btVector3(max[0], min[1], max[2]);
+        btVector3 v6 = btVector3(max[0], max[1], max[2]);
+        btVector3 v7 = btVector3(min[0], max[1], max[2]);
+
+        _debug_lines.push(v0);
+        _debug_lines.push(v1);
+        _debug_lines.push(color);
+        _debug_lines.push(v1);
+        _debug_lines.push(v2);
+        _debug_lines.push(color);
+        _debug_lines.push(v2);
+        _debug_lines.push(v3);
+        _debug_lines.push(color);
+        _debug_lines.push(v3);
+        _debug_lines.push(v0);
+        _debug_lines.push(color);
+
+        _debug_lines.push(v4);
+        _debug_lines.push(v5);
+        _debug_lines.push(color);
+        _debug_lines.push(v5);
+        _debug_lines.push(v6);
+        _debug_lines.push(color);
+        _debug_lines.push(v6);
+        _debug_lines.push(v7);
+        _debug_lines.push(color);
+        _debug_lines.push(v7);
+        _debug_lines.push(v4);
+        _debug_lines.push(color);
+
+        _debug_lines.push(v0);
+        _debug_lines.push(v4);
+        _debug_lines.push(color);
+        _debug_lines.push(v1);
+        _debug_lines.push(v5);
+        _debug_lines.push(color);
+        _debug_lines.push(v2);
+        _debug_lines.push(v6);
+        _debug_lines.push(color);
+        _debug_lines.push(v3);
+        _debug_lines.push(v7);
+        _debug_lines.push(color);
+    }
 
 }// end namespace ot
