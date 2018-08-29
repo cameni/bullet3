@@ -269,7 +269,6 @@
     <ClCompile Include="..\..\src\otbullet\rigid_body.cpp" />
     <ClCompile Include="..\..\src\otbullet\tree_batch.cpp" />
     <ClCompile Include="..\..\src\otbullet\wrapper.cpp" />
-    <ClCompile Include="tm_broadphase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\build3\vs2015\BulletCollision.vcxproj">
@@ -289,7 +288,6 @@
     <ClInclude Include="..\..\src\otbullet\physics_cfg.h" />
     <ClInclude Include="..\..\src\otbullet\tree_batch.h" />
     <ClInclude Include="physics.h" />
-    <ClInclude Include="tm_broadphase.h" />
     <hpp Include="..\..\src\otbullet\otbullet.hpp">
       <FileType>hpp</FileType>
     </hpp>
