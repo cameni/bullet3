@@ -288,6 +288,7 @@
     <ClInclude Include="..\..\src\otbullet\physics.js.h" />
     <ClInclude Include="..\..\src\otbullet\physics_cfg.h" />
     <ClInclude Include="..\..\src\otbullet\tree_batch.h" />
+    <ClInclude Include="shape_info_cfg.h" />
     <hpp Include="..\..\src\otbullet\otbullet.hpp">
       <FileType>hpp</FileType>
     </hpp>
