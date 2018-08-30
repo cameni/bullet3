@@ -197,6 +197,7 @@ public:
 		LocalShapeInfo*			m_localShapeInfo;
 		btVector3				m_hitNormalLocal;
 		btScalar				m_hitFraction;
+        unsigned short          m_otMeshId;         /// outerra package mesh id
 
 	};
 

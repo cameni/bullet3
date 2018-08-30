@@ -64,6 +64,8 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
 
+#include <otbullet/shape_info_cfg.h>
+
 
 
 btCollisionWorld::btCollisionWorld(btDispatcher* dispatcher,btBroadphaseInterface* pairCache, btCollisionConfiguration* collisionConfiguration)
@@ -318,6 +320,7 @@ void	btCollisionWorld::rayTestSingleInternal(const btTransform& rayFromTrans,con
 #endif //USE_SUBSIMPLEX_CONVEX_CAST
 
 					castResult.m_normal.normalize();
+
 					btCollisionWorld::LocalRayResult localRayResult
 						(
 						collisionObjectWrap->getCollisionObject(),
@@ -325,6 +328,14 @@ void	btCollisionWorld::rayTestSingleInternal(const btTransform& rayFromTrans,con
 						castResult.m_normal,
 						castResult.m_fraction
 						);
+
+                    const btCollisionObject * const col_obj = collisionObjectWrap->getCollisionObject();
+                    const btCollisionShape * const shape = col_obj->getCollisionShape2();
+
+                    if (shape) {
+                        const shape_info_base* shape_info = reinterpret_cast<const shape_info_base*>(shape->getUserPointer());
+                        localRayResult.m_otMeshId = shape_info ? shape_info->_mesh_id : -1;
+                    }
 
 					bool normalInWorldSpace = true;
 					resultCallback.addSingleResult(localRayResult, normalInWorldSpace);
@@ -370,6 +381,14 @@ void	btCollisionWorld::rayTestSingleInternal(const btTransform& rayFromTrans,con
 							&shapeInfo,
 							hitNormalWorld,
 							hitFraction);
+
+                        const btCollisionShape * const shape = m_collisionObject->getCollisionShape2();
+
+                        if (shape) {
+                            const shape_info_base* shape_info = reinterpret_cast<const shape_info_base*>(shape->getUserPointer());
+                            rayResult.m_otMeshId = shape_info ? shape_info->_mesh_id : -1;
+                        }
+
 
 						bool	normalInWorldSpace = true;
 						return m_resultCallback->addSingleResult(rayResult,normalInWorldSpace);
@@ -436,6 +455,13 @@ void	btCollisionWorld::rayTestSingleInternal(const btTransform& rayFromTrans,con
 							&shapeInfo,
 							hitNormalWorld,
 							hitFraction);
+
+                        const btCollisionShape * const shape = m_collisionObject->getCollisionShape2();
+
+                        if (shape) {
+                            const shape_info_base* shape_info = reinterpret_cast<const shape_info_base*>(shape->getUserPointer());
+                            rayResult.m_otMeshId = shape_info ? shape_info->_mesh_id : -1;
+                        }
 
 						bool	normalInWorldSpace = true;
 						return m_resultCallback->addSingleResult(rayResult,normalInWorldSpace);
@@ -1004,6 +1030,8 @@ void	btCollisionWorld::rayTest(const btVector3& rayFromWorld, const btVector3& r
 		rayCB.process(m_collisionObjects[i]->getBroadphaseHandle());
 	}	
 #endif //USE_BRUTEFORCE_RAYBROADPHASE
+
+    
 
 }
 
