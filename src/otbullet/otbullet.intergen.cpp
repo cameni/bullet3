@@ -125,7 +125,7 @@ private:
 
 protected:
 
-    COIDNEWDELETE("bt::physics_dispatcher");
+    COIDNEWDELETE(physics_dispatcher);
 
     physics_dispatcher()
     {}
