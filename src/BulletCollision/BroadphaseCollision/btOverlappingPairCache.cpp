@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "btCollisionAlgorithm.h"
 #include "LinearMath/btAabbUtil2.h"
 
+#include "../CollisionDispatch/btCollisionObject.h"
+
 #include <stdio.h>
 
 int	gOverlappingPairs = 0;
@@ -29,7 +31,7 @@ int gRemovePairs =0;
 int gAddedPairs =0;
 int gFindPairs =0;
 
-
+extern unsigned int gCurrentFrame;
 
 
 btHashedOverlappingPairCache::btHashedOverlappingPairCache():
@@ -381,8 +383,13 @@ void	btHashedOverlappingPairCache::processAllOverlappingPairs(btOverlapCallback*
 //	printf("m_overlappingPairArray.size()=%d\n",m_overlappingPairArray.size());
 	for (i=0;i<m_overlappingPairArray.size();)
 	{
-	
 		btBroadphasePair* pair = &m_overlappingPairArray[i];
+		
+		static_cast<btCollisionObject*>(pair->m_pProxy0->m_clientObject)->m_otFlags |= 2; // 	CF_POTENTIAL_OBJECT_COLLISION = 2
+		static_cast<btCollisionObject*>(pair->m_pProxy0->m_clientObject)->m_last_collision_pair_frame = gCurrentFrame;
+		static_cast<btCollisionObject*>(pair->m_pProxy1->m_clientObject)->m_otFlags |= 2; // 	CF_POTENTIAL_OBJECT_COLLISION = 2
+		static_cast<btCollisionObject*>(pair->m_pProxy1->m_clientObject)->m_last_collision_pair_frame = gCurrentFrame;
+		
 		if (callback->processOverlap(*pair))
 		{
 			removeOverlappingPair(pair->m_pProxy0,pair->m_pProxy1,dispatcher);
