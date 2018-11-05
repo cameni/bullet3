@@ -288,7 +288,6 @@ void btCollisionDispatcher::defaultNearCallback(btBroadphasePair& collisionPair,
 				}
 			}
 		}
-
 }
 
 
