@@ -21,8 +21,10 @@ namespace bt {
     class constraint_info;
     class physics;
     struct ot_world_physics_stats;
+    struct external_broadphase;
 }
 extern bt::physics* BT;
+
 //}ifc
 
 namespace ot {
@@ -41,6 +43,12 @@ public:
     ifc_fn static iref<physics> create( double r, void* context );
 	ifc_fn static iref<physics> get();
 
+    ifc_fn void set_simulation_frame(uint frame);
+
+    ifc_fn bt::external_broadphase* create_external_broadphase(const double3& min,const double3& max);
+    ifc_fn void add_collision_object_to_external_broadphase(bt::external_broadphase * bp, btCollisionObject * co, unsigned int group, unsigned int mask);
+    //ifc_fn void remove_collision_object_from_external_broadphase(bt::external_broadphase * bp, simple_collider * sc, btCollisionObject * co);
+    
     ifc_fn void step_simulation( double step );
     ifc_fn void ray_test( const double from[3], const double to[3], void* cb);
 
@@ -112,7 +120,8 @@ public:
         uint frame, 
         bool& is_above_tm,
         double3& under_contact,
-        float3& under_normal);
+        float3& under_normal,
+        coid::dynarray<bt::external_broadphase*>& broadphases);
 
     ifc_event float3 tree_collisions(btRigidBody * obj,
         bt::tree_collision_contex & ctx,
