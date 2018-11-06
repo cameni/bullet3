@@ -132,6 +132,10 @@ public:
 		return m_numHandles;
 	}
 
+    bool ownsProxy(btBroadphaseProxy * proxy) {
+        return (m_pHandles < proxy) && (proxy < m_pHandles + m_maxHandles);
+    }
+
 	virtual void	calculateOverlappingPairs(btDispatcher* dispatcher);
 	
 	BP_FP_INT_TYPE addHandle(const btVector3& aabbMin,const btVector3& aabbMax, void* pOwner,short int collisionFilterGroup,short int collisionFilterMask,btDispatcher* dispatcher,void* multiSapProxy);
@@ -244,6 +248,10 @@ btBroadphaseProxy*	btAxisSweep3Internal<BP_FP_INT_TYPE>::createProxy(  const btV
 			btBroadphaseProxy* rayProxy = m_raycastAccelerator->createProxy(aabbMin,aabbMax,shapeType,userPtr,collisionFilterGroup,collisionFilterMask,dispatcher,0);
 			handle->m_dbvtProxy = rayProxy;
 		}
+
+        handle->m_aabbMin = aabbMin;
+        handle->m_aabbMax = aabbMax;
+
 		return handle;
 }
 
