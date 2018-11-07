@@ -499,7 +499,7 @@ namespace ot {
                 double3 under_terrain_contact;
                 float3 under_terrain_normal;
 
-                int col_result = _aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, gCurrentFrame, is_above_tm, under_terrain_contact, under_terrain_normal);
+                int col_result = _aabb_intersect(_context, _from, _basis, _lod_dim, _triangles, _tree_batches, _tb_cache, gCurrentFrame, is_above_tm, under_terrain_contact, under_terrain_normal,broadphases);
 
                 if (col_result == 0) {
                     //DASSERT(_tree_batches.size() == 0);
@@ -629,6 +629,7 @@ namespace ot {
 
         }
 
+        process_terrain_broadphase_collision_pairs();
         gContactAddedCallback = nullptr;
     }
 
@@ -941,9 +942,9 @@ namespace ot {
                 });
             }
         });
-
-
     }
+
+
 
     discrete_dynamics_world::discrete_dynamics_world(btDispatcher * dispatcher,
         btBroadphaseInterface * pairCache, 
@@ -1019,6 +1020,58 @@ namespace ot {
                 rb->m_otFlags |= bt::EOtCollisionFlags::CF_POTENTIAL_OBJECT_COLLISION;
             }
         }
+    }
+
+    void discrete_dynamics_world::add_debug_aabb(const btVector3 & min, const btVector3 & max, const btVector3& color)
+    {
+        btVector3 v0 = btVector3(min[0], min[1], min[2]);
+        btVector3 v1 = btVector3(max[0], min[1], min[2]);
+        btVector3 v2 = btVector3(max[0], max[1], min[2]);
+        btVector3 v3 = btVector3(min[0], max[1], min[2]);
+
+        btVector3 v4 = btVector3(min[0], min[1], max[2]);
+        btVector3 v5 = btVector3(max[0], min[1], max[2]);
+        btVector3 v6 = btVector3(max[0], max[1], max[2]);
+        btVector3 v7 = btVector3(min[0], max[1], max[2]);
+
+        _debug_lines.push(v0);
+        _debug_lines.push(v1);
+        _debug_lines.push(color);
+        _debug_lines.push(v1);
+        _debug_lines.push(v2);
+        _debug_lines.push(color);
+        _debug_lines.push(v2);
+        _debug_lines.push(v3);
+        _debug_lines.push(color);
+        _debug_lines.push(v3);
+        _debug_lines.push(v0);
+        _debug_lines.push(color);
+
+        _debug_lines.push(v4);
+        _debug_lines.push(v5);
+        _debug_lines.push(color);
+        _debug_lines.push(v5);
+        _debug_lines.push(v6);
+        _debug_lines.push(color);
+        _debug_lines.push(v6);
+        _debug_lines.push(v7);
+        _debug_lines.push(color);
+        _debug_lines.push(v7);
+        _debug_lines.push(v4);
+        _debug_lines.push(color);
+
+        _debug_lines.push(v0);
+        _debug_lines.push(v4);
+        _debug_lines.push(color);
+        _debug_lines.push(v1);
+        _debug_lines.push(v5);
+        _debug_lines.push(color);
+        _debug_lines.push(v2);
+        _debug_lines.push(v6);
+        _debug_lines.push(color);
+        _debug_lines.push(v3);
+        _debug_lines.push(v7);
+        _debug_lines.push(color);
     }
 
 }// end namespace ot
