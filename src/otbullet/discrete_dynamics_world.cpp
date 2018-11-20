@@ -215,9 +215,11 @@ namespace ot {
 
     void discrete_dynamics_world::update_terrain_mesh_broadphase(bt::external_broadphase * bp)
     {
+        bool procedural_objects_cleared = false;
+
         bp->_entries.for_each([&](bt::external_broadphase::broadphase_entry& entry) {
             btBroadphaseProxy * proxy = entry._collision_object->getBroadphaseHandle();
-            
+
             btVector3 min, max;
             entry._collision_object->getCollisionShape()->getAabb(entry._collision_object->getWorldTransform(), min, max);
 
@@ -238,10 +240,29 @@ namespace ot {
 
                 btGhostObject* ghost = btGhostObject::upcast(entry._collision_object);
                 if (ghost) {
-                    entry._collision_object->setCollisionFlags(entry._collision_object->getCollisionFlags() | 
-                        btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE | 
+                    entry._collision_object->setCollisionFlags(entry._collision_object->getCollisionFlags() |
+                        btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE |
                         btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT);
                     add_terrain_occluder(ghost);
+                }
+
+                if (entry._procedural){
+                    if (!procedural_objects_cleared) {
+                        procedural_objects_cleared = true;
+                        bp->_procedural_objects.for_each([&](btCollisionObject*& proc_obj)
+                        {
+                            btGhostObject * ghost = btGhostObject::upcast(proc_obj);
+                            if (ghost) {
+                                remove_terrain_occluder(ghost);
+                            }
+                            removeCollisionObject(proc_obj);
+                            delete (proc_obj);
+                        });
+
+                        bp->_procedural_objects.clear();
+                    }
+
+                    bp->_procedural_objects.push(entry._collision_object);
                 }
             }
 
@@ -316,6 +337,16 @@ namespace ot {
         });
 
 
+    }
+
+    void discrete_dynamics_world::rayTest(const btVector3 & rayFromWorld, const btVector3 & rayToWorld, RayResultCallback & resultCallback) const
+    {
+        btCollisionWorld::rayTest(rayFromWorld,rayToWorld,resultCallback);
+
+        _external_broadphase_pool.for_each([&](bt::external_broadphase& bp) {
+            btCollisionWorld::btSingleRayCallback rayCB(rayFromWorld, rayToWorld, this, resultCallback);
+            bp._broadphase->rayTest(rayFromWorld, rayToWorld, rayCB);
+        });
     }
 
     void discrete_dynamics_world::removeRigidBody(btRigidBody * body)
@@ -980,6 +1011,11 @@ namespace ot {
 
         _cow_internal.reserve(128,false);
         _compound_processing_stack.reserve(128, false);
+    }
+
+    void discrete_dynamics_world::remove_terrain_occluder(btGhostObject * go)
+    {
+        _terrain_occluders.del_key(go);
     }
 
     bool discrete_dynamics_world::is_point_inside_terrain_occluder(const btVector3& pt) {

@@ -30,6 +30,10 @@ ATTRIBUTE_ALIGNED16(class) btConvexHullShape : public btPolyhedralConvexAabbCach
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
+    virtual btCollisionShape* getClone() const override {
+        return new btConvexHullShape(*this);
+    };
+
 	
 	///this constructor optionally takes in a pointer to points. Each point is assumed to be 3 consecutive btScalar (x,y,z), the striding defines the number of bytes between each point, in memory.
 	///It is easier to not pass any points in the constructor, and just add one point at a time, using addPoint.

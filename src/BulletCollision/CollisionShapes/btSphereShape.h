@@ -26,6 +26,11 @@ ATTRIBUTE_ALIGNED16(class) btSphereShape : public btConvexInternalShape
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
+    virtual btCollisionShape* getClone() const override {
+        return new btSphereShape(*this);
+    };
+
+
 	btSphereShape (btScalar radius) : btConvexInternalShape ()
 	{
 		m_shapeType = SPHERE_SHAPE_PROXYTYPE;

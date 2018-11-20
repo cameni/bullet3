@@ -36,6 +36,10 @@ public:
 	
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 	
+    virtual btCollisionShape* getClone() const override {
+        return new btCapsuleShape(*this);
+    };
+
 	btCapsuleShape(btScalar radius,btScalar height);
 
 	///CollisionShape Interface

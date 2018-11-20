@@ -33,6 +33,10 @@ public:
 
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
+    virtual btCollisionShape* getClone() const override {
+        return new btScaledBvhTriangleMeshShape(*this);
+    };
+
 
 	btScaledBvhTriangleMeshShape(btBvhTriangleMeshShape* childShape,const btVector3& localScaling);
 

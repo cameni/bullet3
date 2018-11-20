@@ -33,6 +33,10 @@ ATTRIBUTE_ALIGNED16(class) btConeShape : public btConvexInternalShape
 
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
+
+    virtual btCollisionShape* getClone() const override {
+        return new btConeShape(*this);
+    };
 	
 	btConeShape (btScalar radius,btScalar height);
 	

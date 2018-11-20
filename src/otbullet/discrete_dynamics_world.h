@@ -203,6 +203,8 @@ public:
     void remove_terrain_broadphase_collision_pair(btBroadphasePair& pair);
     void process_terrain_broadphase_collision_pairs();
 
+    void rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, RayResultCallback& resultCallback) const override;
+
     virtual void removeRigidBody(btRigidBody* body) override;
     virtual void removeCollisionObject(btCollisionObject* collisionObject) override;
 
@@ -440,6 +442,7 @@ public:
     }
 
     void add_terrain_occluder(btGhostObject * go) { _terrain_occluders.push(go); }
+    void remove_terrain_occluder(btGhostObject * go);
     bool is_point_inside_terrain_occluder(const btVector3& pt);
     void set_potential_collision_flag(btRigidBody * rb);
     template<class fn> // void (*fn)(btCollisionObject * obj)

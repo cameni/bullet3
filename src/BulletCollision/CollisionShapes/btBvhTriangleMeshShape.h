@@ -49,6 +49,10 @@ public:
 
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
+
+    virtual btCollisionShape* getClone() const override {
+        return new btBvhTriangleMeshShape(*this);
+    };
 	
 	btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression, bool buildBvh = true);
 

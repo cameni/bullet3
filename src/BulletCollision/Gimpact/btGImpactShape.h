@@ -56,6 +56,10 @@ enum eGIMPACT_SHAPE_TYPE
 class btTetrahedronShapeEx:public btBU_Simplex1to4
 {
 public:
+    virtual btCollisionShape* getClone() const override {
+        return new btTetrahedronShapeEx(*this);
+    };
+
 	btTetrahedronShapeEx()
 	{
 		m_numVertices = 4;
@@ -716,6 +720,10 @@ public:
 protected:
 	TrimeshPrimitiveManager m_primitive_manager;
 public:
+
+    virtual btCollisionShape* getClone() const override {
+        return new btGImpactMeshShapePart(*this);
+    };
 
 	btGImpactMeshShapePart()
 	{

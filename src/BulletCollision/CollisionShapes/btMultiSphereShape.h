@@ -33,6 +33,10 @@ ATTRIBUTE_ALIGNED16(class) btMultiSphereShape : public btConvexInternalAabbCachi
 	
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
+
+    virtual btCollisionShape* getClone() const override {
+        return new btMultiSphereShape(*this);
+    };
 	
 	btMultiSphereShape (const btVector3* positions,const btScalar* radi,int numSpheres);
 

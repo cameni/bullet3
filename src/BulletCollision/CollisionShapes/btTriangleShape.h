@@ -27,6 +27,10 @@ public:
 
 BT_DECLARE_ALIGNED_ALLOCATOR();
 
+    virtual btCollisionShape* getClone() const override {
+        return new btTriangleShape(*this);
+    };
+
 	btVector3	m_vertices1[3];
 
 	virtual int getNumVertices() const

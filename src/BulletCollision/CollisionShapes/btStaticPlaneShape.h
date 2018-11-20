@@ -33,6 +33,10 @@ protected:
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
+    virtual btCollisionShape* getClone() const override {
+        return new btStaticPlaneShape(*this);
+    };
+
 	btStaticPlaneShape(const btVector3& planeNormal,btScalar planeConstant);
 
 	virtual ~btStaticPlaneShape();
