@@ -164,7 +164,7 @@ namespace ot {
         integrateTransforms(timeStep);
 
         ///update vehicle simulation
-        //updateActions(timeStep);
+        updateActions(timeStep);
 
         updateActivationState(timeStep);
 
