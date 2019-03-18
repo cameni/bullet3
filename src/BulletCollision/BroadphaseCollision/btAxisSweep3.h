@@ -203,6 +203,10 @@ public:
 
 	}
 
+    virtual bool is_full() const override {
+        return m_firstFreeHandle == 0 ;
+    }
+
 };
 
 ////////////////////////////////////////////////////////////////////

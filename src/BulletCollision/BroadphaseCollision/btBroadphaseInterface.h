@@ -76,6 +76,9 @@ public:
 	virtual void resetPool(btDispatcher* dispatcher) { (void) dispatcher; };
 
 	virtual void	printStats() = 0;
+    
+    /// ADDED BY CYRIL
+    virtual bool is_full() const = 0;
 
 };
 

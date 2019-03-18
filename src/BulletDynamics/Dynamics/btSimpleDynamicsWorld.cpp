@@ -145,23 +145,23 @@ void	btSimpleDynamicsWorld::removeCollisionObject(btCollisionObject* collisionOb
 }
 
 
-void	btSimpleDynamicsWorld::addRigidBody(btRigidBody* body)
+bool	btSimpleDynamicsWorld::addRigidBody(btRigidBody* body)
 {
 	body->setGravity(m_gravity);
 
 	if (body->getCollisionShape())
 	{
-		addCollisionObject(body);
+		return addCollisionObject(body);
 	}
 }
 
-void	btSimpleDynamicsWorld::addRigidBody(btRigidBody* body, short group, short mask)
+bool	btSimpleDynamicsWorld::addRigidBody(btRigidBody* body, short group, short mask)
 {
 	body->setGravity(m_gravity);
 
 	if (body->getCollisionShape())
 	{
-		addCollisionObject(body,group,mask);
+		return addCollisionObject(body,group,mask);
 	}
 }
 

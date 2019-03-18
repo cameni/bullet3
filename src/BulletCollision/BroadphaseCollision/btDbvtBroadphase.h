@@ -116,6 +116,7 @@ struct	btDbvtBroadphase : btBroadphaseInterface
 	virtual	const btOverlappingPairCache*	getOverlappingPairCache() const;
 	virtual	void					getBroadphaseAabb(btVector3& aabbMin,btVector3& aabbMax) const;
 	virtual	void					printStats();
+    virtual bool                    is_full() const override { return false; }
 
 
 	///reset broadphase internal structures, to ensure determinism/reproducability

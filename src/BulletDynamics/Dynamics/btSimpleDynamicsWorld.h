@@ -54,9 +54,9 @@ public:
 
 	virtual btVector3 getGravity () const;
 
-	virtual void	addRigidBody(btRigidBody* body);
+	virtual bool	addRigidBody(btRigidBody* body);
 
-	virtual void	addRigidBody(btRigidBody* body, short group, short mask);
+	virtual bool	addRigidBody(btRigidBody* body, short group, short mask);
 
 	virtual void	removeRigidBody(btRigidBody* body);
 
