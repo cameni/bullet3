@@ -103,6 +103,11 @@ namespace ot {
     }
 
 
+    void discrete_dynamics_world::delete_external_broadphase(bt::external_broadphase * bp) {
+        _external_broadphase_pool.del(bp);
+    }
+
+
     void discrete_dynamics_world::internalSingleStepSimulation(btScalar timeStep)
     {
 #ifdef _PROFILING_ENABLED

@@ -576,7 +576,7 @@ public:
 											const btCollisionObjectWrapper* colObjWrap,
 											ConvexResultCallback& resultCallback, btScalar allowedPenetration);
 
-	virtual void	addCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup=btBroadphaseProxy::DefaultFilter,short int collisionFilterMask=btBroadphaseProxy::AllFilter);
+	virtual bool	addCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup=btBroadphaseProxy::DefaultFilter,short int collisionFilterMask=btBroadphaseProxy::AllFilter);
 
 	btCollisionObjectArray& getCollisionObjectArray()
 	{

@@ -114,13 +114,17 @@ btCollisionWorld::~btCollisionWorld()
 
 
 
-void	btCollisionWorld::addCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup,short int collisionFilterMask)
+bool	btCollisionWorld::addCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup,short int collisionFilterMask)
 {
 
 	btAssert(collisionObject);
 
 	//check that the object isn't already added
 	btAssert( m_collisionObjects.findLinearSearch(collisionObject)  == m_collisionObjects.size());
+
+    if (m_collisionObjects.findLinearSearch(collisionObject) != m_collisionObjects.size() || m_broadphasePairCache->is_full()) {
+        return false;
+    }
 
 	m_collisionObjects.push_back(collisionObject);
 
@@ -144,8 +148,7 @@ void	btCollisionWorld::addCollisionObject(btCollisionObject* collisionObject,sho
 
 
 
-
-
+    return true;
 }
 
 

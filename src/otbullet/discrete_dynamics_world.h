@@ -194,6 +194,7 @@ protected:
 
 public:
     bt::external_broadphase * create_external_broadphase(const double3& min, const double3& max);
+    void delete_external_broadphase(bt::external_broadphase * bp);
 
 #ifdef _DEBUG
     void dump_triangle_list_to_obj(const char * fname,float off_x, float off_y, float off_z, float rx, float ry, float rz, float rw);
