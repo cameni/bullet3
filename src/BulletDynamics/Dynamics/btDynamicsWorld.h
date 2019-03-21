@@ -86,9 +86,9 @@ public:
 
 		virtual void	synchronizeMotionStates() = 0;
 
-		virtual void	addRigidBody(btRigidBody* body) = 0;
+		virtual bool	addRigidBody(btRigidBody* body) = 0;
 
-		virtual void	addRigidBody(btRigidBody* body, short group, short mask) = 0;
+		virtual bool	addRigidBody(btRigidBody* body, short group, short mask) = 0;
 
 		virtual void	removeRigidBody(btRigidBody* body) = 0;
 
