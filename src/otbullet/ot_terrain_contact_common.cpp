@@ -407,7 +407,7 @@ void ot_terrain_contact_common::add_additional_col_obj(btCollisionObject * col_o
 	*_additional_col_objs.add(1) = col_obj;
 }
 
-void ot_terrain_contact_common::clear_common_data()
+void ot_terrain_contact_common::clear_common_data(float triangle_collision_margin, ot::discrete_dynamics_world * world, btCollisionObjectWrapper * planet_body_wrap)
 {
     _curr_collider = ctCount;
     _curr_algo = 0;

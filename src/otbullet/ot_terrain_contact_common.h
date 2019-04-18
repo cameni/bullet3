@@ -130,7 +130,7 @@ public:
 
     void set_internal_obj_wrapper(btCollisionObjectWrapper * internal_wrap) { _internal_object = internal_wrap;};
     
-    void clear_common_data();
+    void clear_common_data(float triangle_collision_margin, ot::discrete_dynamics_world * world, btCollisionObjectWrapper * planet_body_wrap);
 
     void set_bounding_sphere_rad(float rad) { _sphere_radius = rad; }
 private:

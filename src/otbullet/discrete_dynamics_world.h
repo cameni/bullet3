@@ -92,9 +92,9 @@ struct raw_collision_pair {
 
 ///
 struct compound_processing_entry {
-    btCollisionShape * _shape;
+    const btCollisionShape * _shape;
     btTransform _world_trans;
-    compound_processing_entry(btCollisionShape * shape, const btTransform & world_trans)
+    compound_processing_entry(const btCollisionShape * shape, const btTransform & world_trans)
         :_shape(shape)
         ,_world_trans(world_trans)
     {};
@@ -158,14 +158,14 @@ protected:
     btCollisionObjectWrapper * _pb_wrap;
     coid::slotalloc<btPersistentManifold *> _manifolds;
     coid::slotalloc<tree_collision_pair> _tree_collision_pairs;
-    coid::dynarray<btCollisionObjectWrapperCtorArgs> _cow_internal;
-    coid::dynarray<compound_processing_entry> _compound_processing_stack;
+    //coid::dynarray<btCollisionObjectWrapperCtorArgs> _cow_internal;
+    //coid::dynarray<compound_processing_entry> _compound_processing_stack;
 
-    coid::dynarray<bt::triangle> _triangles;
+    //coid::dynarray<bt::triangle> _triangles;
     coid::slotalloc<bt::tree_batch> _tb_cache;
     //void * _relocation_offset;
 
-    coid::dynarray<uint> _tree_batches;
+    //coid::dynarray<uint> _tree_batches;
 
     coid::dynarray<btGhostObject*> _terrain_occluders;
 
@@ -175,11 +175,11 @@ protected:
 
     coid::slotalloc_pool<bt::external_broadphase> _external_broadphase_pool;
 
-    double3 _from;
-    float3 _ray;
-    float _rad;
-    float3x3 _basis;
-    float _lod_dim;
+    //double3 _from;
+    //float3 _ray;
+    //float _rad;
+    //float3x3 _basis;
+    //float _lod_dim;
 
     bt::ot_world_physics_stats _stats;
 
@@ -190,7 +190,7 @@ protected:
     */
     coid::dynarray<uint> _debug_trees;
 
-    coid::local<ot_terrain_contact_common> _common_data;
+    //coid::local<ot_terrain_contact_common> _common_data;
 
 public:
     bt::external_broadphase * create_external_broadphase(const double3& min, const double3& max);
@@ -488,6 +488,8 @@ protected:
     virtual void internalSingleStepSimulation(btScalar timeStep) override;
 
     void ot_terrain_collision_step();
+    void ot_terrain_vs_object(btRigidBody * rb);
+    void decompose_compound_collision_shapes(coid::dynarray<btCollisionObjectWrapperCtorArgs>& cow_internal , btCollisionObjectWrapper* collider_wrapper);
 
     void prepare_tree_collision_pairs(btCollisionObject * cur_obj, const coid::dynarray<uint>& trees_cache, uint32 frame);
     void build_tb_collision_info(bt::tree_batch * tb);
