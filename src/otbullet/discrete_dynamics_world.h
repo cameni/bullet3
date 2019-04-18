@@ -192,6 +192,8 @@ protected:
 
     coid::local<ot_terrain_contact_common> _common_data;
 
+    bt::bullet_stats * _stats2;
+
 public:
     bt::external_broadphase * create_external_broadphase(const double3& min, const double3& max);
     void delete_external_broadphase(bt::external_broadphase * bp);
@@ -211,6 +213,8 @@ public:
     virtual void removeCollisionObject(btCollisionObject* collisionObject) override;
 
     virtual void debugDrawWorld() override;
+
+    void set_ot_stats(bt::bullet_stats * stats) { _stats2 = stats; };
 
     typedef bool (*fn_ext_collision)(
         const void* context,
@@ -484,6 +488,8 @@ public:
     }
 
 protected:
+
+    virtual void updateActions(btScalar timeStep) override;
 
     virtual void internalSingleStepSimulation(btScalar timeStep) override;
 
