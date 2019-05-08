@@ -263,6 +263,12 @@ void physics::delete_external_broadphase(bt::external_broadphase * bp)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void physics::update_external_broadphase(bt::external_broadphase * bp)
+{
+    return _world->update_terrain_mesh_broadphase(bp);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 bool physics::add_collision_object_to_external_broadphase(bt::external_broadphase * bp, btCollisionObject * co, unsigned int group, unsigned int mask)
 {
     if (bp->_broadphase->is_full()) {
@@ -323,9 +329,11 @@ void physics::query_volume_sphere(const double3 & pos, float rad, coid::dynarray
     _physics->external_broadphases_in_radius(_world->getContext(), pos, rad, gCurrentFrame, ebps);
 
     ebps.for_each([&](bt::external_broadphase* ebp) {
-        if (ebp->_dirty) {
+        /*if (ebp->_dirty) {
             _world->update_terrain_mesh_broadphase(ebp);
-        }
+        }*/
+
+        DASSERT(!ebp->_dirty);
 
         _world->query_volume_sphere(ebp->_broadphase, pos, rad, [&](btCollisionObject* obj) {
             if (obj->getUserPointer())
@@ -621,7 +629,8 @@ void physics::ray_test( const double from[3], const double to[3], void* cb, bt::
     btVector3 ato = btVector3(to[0], to[1], to[2]);
 
     if (bp && bp->_dirty) {
-        _world->update_terrain_mesh_broadphase(bp);
+        DASSERT(0 && "should be already updated");
+        //_world->update_terrain_mesh_broadphase(bp);
     }
 
     _world->rayTest(afrom, ato, *(btCollisionWorld::RayResultCallback*)cb, bp);
