@@ -140,7 +140,7 @@ public:
 
 	virtual	void freeCollisionAlgorithm(void* ptr);
 
-	btCollisionConfiguration*	getCollisionConfiguration()
+	virtual btCollisionConfiguration*	getCollisionConfiguration() override
 	{
 		return m_collisionConfiguration;
 	}

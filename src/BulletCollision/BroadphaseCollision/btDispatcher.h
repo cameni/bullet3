@@ -23,6 +23,7 @@ class btRigidBody;
 class	btCollisionObject;
 class btOverlappingPairCache;
 struct btCollisionObjectWrapper;
+class btCollisionConfiguration;
 
 class btPersistentManifold;
 class btPoolAllocator;
@@ -100,6 +101,8 @@ public:
 	virtual	void* allocateCollisionAlgorithm(int size)  = 0;
 
 	virtual	void freeCollisionAlgorithm(void* ptr) = 0;
+
+    virtual btCollisionConfiguration* getCollisionConfiguration() = 0;
 
 };
 

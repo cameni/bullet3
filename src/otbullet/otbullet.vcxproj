@@ -269,6 +269,7 @@
     <ClCompile Include="..\..\src\otbullet\rigid_body.cpp" />
     <ClCompile Include="..\..\src\otbullet\tree_batch.cpp" />
     <ClCompile Include="..\..\src\otbullet\wrapper.cpp" />
+    <ClCompile Include="multithread_default_collision_configuration.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\comm\_build\msvc\2015\comm_static.vcxproj">
@@ -290,6 +291,7 @@
     <ClInclude Include="..\..\src\otbullet\physics.js.h" />
     <ClInclude Include="..\..\src\otbullet\physics_cfg.h" />
     <ClInclude Include="..\..\src\otbullet\tree_batch.h" />
+    <ClInclude Include="multithread_default_collision_configuration.h" />
     <ClInclude Include="shape_info_cfg.h" />
     <ClInclude Include="physics.h" />
     <hpp Include="..\..\src\otbullet\otbullet.hpp">

@@ -28,6 +28,7 @@ struct	btDefaultCollisionConstructionInfo
 	int					m_defaultMaxCollisionAlgorithmPoolSize;
 	int					m_customCollisionAlgorithmMaxElementSize;
 	int					m_useEpaPenetrationAlgorithm;
+    bool                m_owns_simplex_and_pd_solver;
 
 	btDefaultCollisionConstructionInfo()
 		:m_persistentManifoldPool(0),
@@ -35,7 +36,8 @@ struct	btDefaultCollisionConstructionInfo
 		m_defaultMaxPersistentManifoldPoolSize(4096),
 		m_defaultMaxCollisionAlgorithmPoolSize(4096),
 		m_customCollisionAlgorithmMaxElementSize(0),
-		m_useEpaPenetrationAlgorithm(true)
+		m_useEpaPenetrationAlgorithm(true),
+        m_owns_simplex_and_pd_solver(true)
 	{
 	}
 };
@@ -59,6 +61,8 @@ protected:
 
 	btPoolAllocator*	m_collisionAlgorithmPool;
 	bool	m_ownsCollisionAlgorithmPool;
+
+    btDefaultCollisionConstructionInfo info;
 
 	//default simplex/penetration depth solvers
 	btVoronoiSimplexSolver*	m_simplexSolver;
@@ -107,6 +111,9 @@ public:
 		return m_simplexSolver;
 	}
 
+    virtual btConvexPenetrationDepthSolver* getPdSolver() {
+        return m_pdSolver;
+    }
 
 	virtual btCollisionAlgorithmCreateFunc* getCollisionAlgorithmCreateFunc(int proxyType0,int proxyType1);
 

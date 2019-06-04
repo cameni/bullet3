@@ -27,11 +27,17 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionConfiguration.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
 
+#include <mutex>
+
 int gNumManifold = 0;
 
 #ifdef BT_DEBUG
 #include <stdio.h>
 #endif
+
+
+std::mutex g_manifold_mutex;
+std::mutex g_colalg_alloc_mutex;
 
 
 btCollisionDispatcher::btCollisionDispatcher (btCollisionConfiguration* collisionConfiguration): 
@@ -70,6 +76,7 @@ btCollisionDispatcher::~btCollisionDispatcher()
 
 btPersistentManifold*	btCollisionDispatcher::getNewManifold(const btCollisionObject* body0,const btCollisionObject* body1) 
 { 
+    std::lock_guard<std::mutex> lock(g_manifold_mutex);
 	gNumManifold++;
 	
 	//btAssert(gNumManifold < 65535);
@@ -117,13 +124,14 @@ void btCollisionDispatcher::clearManifold(btPersistentManifold* manifold)
 	
 void btCollisionDispatcher::releaseManifold(btPersistentManifold* manifold)
 {
-	
+    std::lock_guard<std::mutex> lock(g_manifold_mutex);
 	gNumManifold--;
 
 	//printf("releaseManifold: gNumManifold %d\n",gNumManifold);
 	clearManifold(manifold);
 
 	int findIndex = manifold->m_index1a;
+    int manifolds_size = m_manifoldsPtr.size();
 	btAssert(findIndex < m_manifoldsPtr.size());
 	m_manifoldsPtr.swap(findIndex,m_manifoldsPtr.size()-1);
 	m_manifoldsPtr[findIndex]->m_index1a = findIndex;
@@ -293,7 +301,9 @@ void btCollisionDispatcher::defaultNearCallback(btBroadphasePair& collisionPair,
 
 void* btCollisionDispatcher::allocateCollisionAlgorithm(int size)
 {
-	if (m_collisionAlgorithmPoolAllocator->getFreeCount())
+    std::lock_guard<std::mutex> lock(g_colalg_alloc_mutex);
+
+    if (m_collisionAlgorithmPoolAllocator->getFreeCount())
 	{
 		return m_collisionAlgorithmPoolAllocator->allocate(size);
 	}
@@ -304,6 +314,7 @@ void* btCollisionDispatcher::allocateCollisionAlgorithm(int size)
 
 void btCollisionDispatcher::freeCollisionAlgorithm(void* ptr)
 {
+    std::lock_guard<std::mutex> lock(g_colalg_alloc_mutex);
 	if (m_collisionAlgorithmPoolAllocator->validPtr(ptr))
 	{
 		m_collisionAlgorithmPoolAllocator->freeMemory(ptr);

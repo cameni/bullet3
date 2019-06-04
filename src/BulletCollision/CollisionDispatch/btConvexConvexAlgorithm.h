@@ -43,8 +43,8 @@ class btConvexConvexAlgorithm : public btActivatingCollisionAlgorithm
 #ifdef USE_SEPDISTANCE_UTIL2
 	btConvexSeparatingDistanceUtil	m_sepDistance;
 #endif
-	btSimplexSolverInterface*		m_simplexSolver;
-	btConvexPenetrationDepthSolver* m_pdSolver;
+//	btSimplexSolverInterface*		m_simplexSolver;
+//	btConvexPenetrationDepthSolver* m_pdSolver;
 
 	btVertexArray worldVertsB1;
 	btVertexArray worldVertsB2;

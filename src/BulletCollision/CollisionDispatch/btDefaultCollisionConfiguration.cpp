@@ -43,19 +43,28 @@ subject to the following restrictions:
 btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(const btDefaultCollisionConstructionInfo& constructionInfo)
 //btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(btStackAlloc*	stackAlloc,btPoolAllocator*	persistentManifoldPool,btPoolAllocator*	collisionAlgorithmPool)
 {
+    info = constructionInfo;
+    void* mem;
 
-	void* mem = btAlignedAlloc(sizeof(btVoronoiSimplexSolver),16);
-	m_simplexSolver = new (mem)btVoronoiSimplexSolver();
+    if (constructionInfo.m_owns_simplex_and_pd_solver) {
+        mem = btAlignedAlloc(sizeof(btVoronoiSimplexSolver), 16);
+        m_simplexSolver = new (mem)btVoronoiSimplexSolver();
 
-	if (constructionInfo.m_useEpaPenetrationAlgorithm)
-	{
-		mem = btAlignedAlloc(sizeof(btGjkEpaPenetrationDepthSolver),16);
-		m_pdSolver = new (mem)btGjkEpaPenetrationDepthSolver;
-	}else
-	{
-		mem = btAlignedAlloc(sizeof(btMinkowskiPenetrationDepthSolver),16);
-		m_pdSolver = new (mem)btMinkowskiPenetrationDepthSolver;
-	}
+        if (constructionInfo.m_useEpaPenetrationAlgorithm)
+        {
+            mem = btAlignedAlloc(sizeof(btGjkEpaPenetrationDepthSolver), 16);
+            m_pdSolver = new (mem)btGjkEpaPenetrationDepthSolver;
+        }
+        else
+        {
+            mem = btAlignedAlloc(sizeof(btMinkowskiPenetrationDepthSolver), 16);
+            m_pdSolver = new (mem)btMinkowskiPenetrationDepthSolver;
+        }
+    }
+    else {
+        m_simplexSolver = nullptr;
+        m_pdSolver = nullptr;
+    }
 	
 	//default CreationFunctions, filling the m_doubleDispatch table
 	mem = btAlignedAlloc(sizeof(btConvexConvexAlgorithm::CreateFunc),16);
@@ -193,13 +202,14 @@ btDefaultCollisionConfiguration::~btDefaultCollisionConfiguration()
 	m_planeConvexCF->~btCollisionAlgorithmCreateFunc();
 	btAlignedFree( m_planeConvexCF);
 
-	m_simplexSolver->~btVoronoiSimplexSolver();
-	btAlignedFree(m_simplexSolver);
+    if (info.m_owns_simplex_and_pd_solver) {
+	    m_simplexSolver->~btVoronoiSimplexSolver();
+	    btAlignedFree(m_simplexSolver);
 
-	m_pdSolver->~btConvexPenetrationDepthSolver();
+	    m_pdSolver->~btConvexPenetrationDepthSolver();
 	
-	btAlignedFree(m_pdSolver);
-
+	    btAlignedFree(m_pdSolver);
+    }
 
 }
 

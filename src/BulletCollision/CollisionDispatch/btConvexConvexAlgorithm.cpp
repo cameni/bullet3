@@ -54,6 +54,8 @@ subject to the following restrictions:
 #include "BulletCollision/NarrowPhaseCollision/btPolyhedralContactClipping.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
 
+#include "BulletCollision/CollisionDispatch/btCollisionConfiguration.h"
+
 ///////////
 
 
@@ -193,8 +195,8 @@ btConvexConvexAlgorithm::CreateFunc::~CreateFunc()
 
 btConvexConvexAlgorithm::btConvexConvexAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollisionObjectWrapper* body0Wrap,const btCollisionObjectWrapper* body1Wrap,btSimplexSolverInterface* simplexSolver, btConvexPenetrationDepthSolver* pdSolver,int numPerturbationIterations, int minimumPointsPerturbationThreshold)
 : btActivatingCollisionAlgorithm(ci,body0Wrap,body1Wrap),
-m_simplexSolver(simplexSolver),
-m_pdSolver(pdSolver),
+//m_simplexSolver(simplexSolver),
+//m_pdSolver(pdSolver),
 m_ownManifold (false),
 m_manifoldPtr(mf),
 m_lowLevelOfDetail(false),
@@ -350,7 +352,7 @@ void btConvexConvexAlgorithm ::processCollision (const btCollisionObjectWrapper*
 	
 	btGjkPairDetector::ClosestPointInput input;
 
-	btGjkPairDetector	gjkPairDetector(min0,min1,m_simplexSolver,m_pdSolver);
+	btGjkPairDetector	gjkPairDetector(min0,min1, m_dispatcher->getCollisionConfiguration()->getSimplexSolver(), m_dispatcher->getCollisionConfiguration()->getPdSolver());
 	//TODO: if (dispatchInfo.m_useContinuous)
 	gjkPairDetector.setMinkowskiA(min0);
 	gjkPairDetector.setMinkowskiB(min1);
