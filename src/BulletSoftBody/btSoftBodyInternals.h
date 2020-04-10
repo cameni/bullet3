@@ -59,7 +59,10 @@ public:
 
 	virtual ~btSoftBodyCollisionShape()
 	{
+	}
 
+	virtual btCollisionShape* getClone() const override {
+		return new btSoftBodyCollisionShape(*this);
 	}
 
 	void	processAllTriangles(btTriangleCallback* /*callback*/,const btVector3& /*aabbMin*/,const btVector3& /*aabbMax*/) const
@@ -122,6 +125,9 @@ public:
 
 	btSoftClusterCollisionShape (const btSoftBody::Cluster* cluster) : m_cluster(cluster) { setMargin(0); }
 
+	virtual btCollisionShape* getClone() const override {
+		return new btSoftClusterCollisionShape(*this);
+	}
 
 	virtual btVector3	localGetSupportingVertex(const btVector3& vec) const
 	{
