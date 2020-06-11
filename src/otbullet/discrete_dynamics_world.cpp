@@ -239,6 +239,11 @@ namespace ot {
                 else {
                     bp->_broadphase->destroyProxy(proxy,getDispatcher());
                     proxy->m_ot_revision = 0xffffffff; // invalidate proxy
+                    btCollisionObject* client_object = static_cast<btCollisionObject*>(proxy->m_clientObject);
+                    
+                    if (client_object && client_object->getBroadphaseHandle() == proxy) { // client object has still same proxy that is invalid so clear it (it happens when object is set not visible)
+                        client_object->setBroadphaseHandle(nullptr);
+                    }
                 }
             });
         });
@@ -526,7 +531,7 @@ namespace ot {
             uint tri_count = 0;
 
             THREAD_LOCAL_SINGLETON_DEF(coid::dynarray<bt::external_broadphase*>) broadphase_tls;
-            coid::dynarray<bt::external_broadphase*> broadphases = *broadphase_tls;
+            coid::dynarray<bt::external_broadphase*>& broadphases = *broadphase_tls;
 
             for (uints j = 0; j < _cow_internal.size(); j++) {
                 if (_cow_internal[j]._shape->getUserIndex() & 1) { // do not collide with terrain
@@ -1059,8 +1064,8 @@ namespace ot {
         , _elevation_above_terrain(ext_elevation_above_terrain)
         , _debug_terrain_triangles(1024)
         , _debug_trees(1024)
-        , _tb_cache(1024)
-        , _terrain_mesh_broadphase_pairs(1024)
+        , _tb_cache(1024, coid::reserve_mode::memory)
+        , _terrain_mesh_broadphase_pairs(1024, coid::reserve_mode::memory)
         , _task_master(tm)
         //, _relocation_offset(0)
     {
