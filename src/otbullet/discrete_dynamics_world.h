@@ -213,6 +213,7 @@ public:
 
     virtual void removeRigidBody(btRigidBody* body) override;
     virtual void removeCollisionObject(btCollisionObject* collisionObject) override;
+    void removeCollisionObject_external(btCollisionObject* collisionObject);
 
     virtual void debugDrawWorld() override;
 
