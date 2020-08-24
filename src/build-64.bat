@@ -37,7 +37,7 @@ set /p revision=<otbullet\revision.last
 echo Revision: %revision%
 
 set VERSTR=%userver%.%revision%
-set VERLST=%userver%.0x%revision%
+set VERLST=%userver%
 set VERLST=%VERLST:.=,%
 
 echo VERSTR: %VERSTR%
@@ -73,3 +73,5 @@ xcopy ..\bin\x64\ReleaseLTCG\otbullet.dll ..\..\..\..\bin\ /y
 xcopy ..\bin\x64\ReleaseLTCG\otbullet.pdb ..\..\..\..\bin\ /y
 xcopy ..\bin\x64\Debug\otbulletd.dll ..\..\..\..\bin\ /y
 xcopy ..\bin\x64\Debug\otbulletd.pdb ..\..\..\..\bin\ /y
+
+git commit -m "version update" otbullet/version.last
