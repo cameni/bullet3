@@ -196,6 +196,8 @@ protected:
     bool _simulation_running = true;
 
 public:
+    void updateAabbs() override;
+
     bt::external_broadphase * create_external_broadphase(const double3& min, const double3& max);
     void delete_external_broadphase(bt::external_broadphase * bp);
 
@@ -484,7 +486,7 @@ public:
                 if (cur_node->data) {
                     btDbvtProxy* dat = reinterpret_cast<btDbvtProxy*>(cur_node->data);
                     btCollisionObject * co = reinterpret_cast<btCollisionObject*>(dat->m_clientObject);
-                    if(co->getBroadphaseHandle() && broadphase->ownsProxy(co->getBroadphaseHandle()) && co->getBroadphaseHandle()->m_ot_revision == revision)
+                    if(co->getBroadphaseHandle() && broadphase->ownsProxy(co->getBroadphaseHandle()) && (co->getBroadphaseHandle()->m_ot_revision == revision || revision == 0xffffffff))
                         process_fn(co);
                 }
             }
