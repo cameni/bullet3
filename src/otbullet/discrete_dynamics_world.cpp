@@ -28,6 +28,7 @@
 #include <comm/profiler/profiler.h>
 
 #include <ot/glm/glm_ext.h>
+#include <ot/object_cfg.h>
 
 extern unsigned int gOuterraSimulationFrame;
 
@@ -510,10 +511,12 @@ namespace ot {
             btCollisionObject * obj = m_collisionObjects[i];
             btRigidBody * rb = btRigidBody::upcast(obj);
 
-            if (!rb || (obj->getCollisionShape()->getShapeType() != SPHERE_SHAPE_PROXYTYPE &&
+            if (!rb || 
+                (obj->getCollisionShape()->getShapeType() != SPHERE_SHAPE_PROXYTYPE &&
                 obj->getCollisionShape()->getShapeType() != CAPSULE_SHAPE_PROXYTYPE &&
                 !obj->getCollisionShape()->isConvex() &&
-                obj->getCollisionShape()->getShapeType() != COMPOUND_SHAPE_PROXYTYPE))
+                obj->getCollisionShape()->getShapeType() != COMPOUND_SHAPE_PROXYTYPE) ||
+                (rb->getBroadphaseHandle()->m_collisionFilterMask & ot::collision::cg_terrain) == 0)
             {
                 continue;
             }
